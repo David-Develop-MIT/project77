@@ -4,12 +4,14 @@ import { useMutation } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, MapPin, User, Phone, Calendar, Clock, FileText, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MapPin, User, Phone, Calendar, Clock, FileText, Send, Loader2, DollarSign, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import ServiceCard from '@/components/ServiceCard';
+import AddressForm from '@/components/AddressForm';
+import PaymentMethodCard from '@/components/PaymentMethodCard';
 import { servicoConfig } from '@/components/servicoConfig';
 import { toast } from 'sonner';
 
@@ -19,17 +21,26 @@ export default function NovoPedido() {
   const tipoInicial = urlParams.get('tipo');
   
   const [step, setStep] = useState(1);
+  const totalSteps = 4;
   const [formData, setFormData] = useState({
     tipo_servico: tipoInicial || '',
     nome_cliente: '',
     telefone_cliente: '',
+    cep_origem: '',
     endereco_origem: '',
+    numero_origem: '',
+    complemento_origem: '',
+    cep_destino: '',
     endereco_destino: '',
+    numero_destino: '',
+    complemento_destino: '',
     data_agendada: '',
     horario: '',
     descricao: '',
     observacoes: '',
-    valor_estimado: null,
+    valor_total: null,
+    metodo_pagamento: '',
+    status_pagamento: 'pendente',
     status: 'pendente'
   });
 
@@ -60,8 +71,16 @@ export default function NovoPedido() {
   };
 
   const handleSubmit = () => {
-    if (!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem) {
+    if (!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || !formData.numero_origem) {
       toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+    if (!formData.metodo_pagamento) {
+      toast.error('Selecione um método de pagamento');
+      return;
+    }
+    if (!formData.valor_total || formData.valor_total <= 0) {
+      toast.error('Informe o valor do serviço');
       return;
     }
     createMutation.mutate(formData);
@@ -90,14 +109,15 @@ export default function NovoPedido() {
             <h1 className="text-2xl font-bold text-slate-800">Novo Pedido</h1>
             <p className="text-slate-500">
               {step === 1 ? 'Selecione o tipo de serviço' : 
-               step === 2 ? 'Informações do cliente' : 'Detalhes do serviço'}
+               step === 2 ? 'Informações do cliente' : 
+               step === 3 ? 'Detalhes do serviço' : 'Pagamento'}
             </p>
           </div>
         </motion.div>
 
         {/* Progress */}
         <div className="flex items-center gap-2 mb-8">
-          {[1, 2, 3].map(s => (
+          {[1, 2, 3, 4].map(s => (
             <div key={s} className="flex-1">
               <div className={`h-1.5 rounded-full transition-all duration-300 ${
                 s <= step ? 'bg-orange-500' : 'bg-slate-200'
@@ -169,38 +189,40 @@ export default function NovoPedido() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-slate-700 flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-emerald-500" />
-                    Endereço de origem *
-                  </Label>
-                  <Input
-                    placeholder="Rua, número, bairro, cidade"
-                    value={formData.endereco_origem}
-                    onChange={(e) => handleChange('endereco_origem', e.target.value)}
-                    className="rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500"
-                  />
-                </div>
+                <AddressForm
+                  label="Endereço de Origem"
+                  cep={formData.cep_origem}
+                  endereco={formData.endereco_origem}
+                  numero={formData.numero_origem}
+                  complemento={formData.complemento_origem}
+                  onCepChange={(value) => handleChange('cep_origem', value)}
+                  onEnderecoChange={(value) => handleChange('endereco_origem', value)}
+                  onNumeroChange={(value) => handleChange('numero_origem', value)}
+                  onComplementoChange={(value) => handleChange('complemento_origem', value)}
+                  required={true}
+                  color="text-emerald-500"
+                />
 
                 {needsDestination && (
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-orange-500" />
-                      Endereço de destino
-                    </Label>
-                    <Input
-                      placeholder="Rua, número, bairro, cidade"
-                      value={formData.endereco_destino}
-                      onChange={(e) => handleChange('endereco_destino', e.target.value)}
-                      className="rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500"
-                    />
-                  </div>
+                  <AddressForm
+                    label="Endereço de Destino"
+                    cep={formData.cep_destino}
+                    endereco={formData.endereco_destino}
+                    numero={formData.numero_destino}
+                    complemento={formData.complemento_destino}
+                    onCepChange={(value) => handleChange('cep_destino', value)}
+                    onEnderecoChange={(value) => handleChange('endereco_destino', value)}
+                    onNumeroChange={(value) => handleChange('numero_destino', value)}
+                    onComplementoChange={(value) => handleChange('complemento_destino', value)}
+                    required={false}
+                    color="text-orange-500"
+                  />
                 )}
 
                 <div className="flex justify-end pt-4">
                   <Button 
                     onClick={() => setStep(3)}
-                    disabled={!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem}
+                    disabled={!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || !formData.numero_origem}
                     className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-6"
                   >
                     Continuar
@@ -282,8 +304,106 @@ export default function NovoPedido() {
                     Voltar
                   </Button>
                   <Button 
+                    onClick={() => setStep(4)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-6"
+                  >
+                    Continuar
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 4 - Payment */}
+          {step === 4 && (
+            <motion.div
+              key="step4"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm"
+            >
+              <h2 className="text-lg font-semibold text-slate-800 mb-6">Pagamento</h2>
+              
+              <div className="space-y-6">
+                {/* Valor */}
+                <div className="space-y-2">
+                  <Label className="text-slate-700 flex items-center gap-2">
+                    <DollarSign className="w-4 h-4 text-slate-400" />
+                    Valor do serviço *
+                  </Label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">
+                      R$
+                    </span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="0,00"
+                      value={formData.valor_total || ''}
+                      onChange={(e) => handleChange('valor_total', parseFloat(e.target.value))}
+                      className="rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500 pl-12 text-lg font-semibold"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Informe o valor total do serviço
+                  </p>
+                </div>
+
+                {/* Métodos de Pagamento */}
+                <div className="space-y-3">
+                  <Label className="text-slate-700">
+                    Método de Pagamento *
+                  </Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {['pix', 'cartao_credito', 'cartao_debito', 'dinheiro'].map((method) => (
+                      <PaymentMethodCard
+                        key={method}
+                        method={method}
+                        selected={formData.metodo_pagamento === method}
+                        onClick={() => handleChange('metodo_pagamento', method)}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Resumo */}
+                {formData.valor_total > 0 && formData.metodo_pagamento && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-5 border border-orange-200"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-slate-700 font-medium">Total a pagar</span>
+                      <span className="text-2xl font-bold text-orange-600">
+                        R$ {formData.valor_total.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-slate-600">
+                      <CheckCircle2 className="w-4 h-4 text-orange-500" />
+                      <span>
+                        Pagamento via {formData.metodo_pagamento === 'pix' ? 'PIX' : 
+                          formData.metodo_pagamento === 'cartao_credito' ? 'Cartão de Crédito' :
+                          formData.metodo_pagamento === 'cartao_debito' ? 'Cartão de Débito' : 'Dinheiro'}
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setStep(3)}
+                    className="rounded-xl"
+                  >
+                    Voltar
+                  </Button>
+                  <Button 
                     onClick={handleSubmit}
-                    disabled={createMutation.isPending}
+                    disabled={createMutation.isPending || !formData.valor_total || !formData.metodo_pagamento}
                     className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl px-6 shadow-lg shadow-orange-500/25"
                   >
                     {createMutation.isPending ? (
@@ -294,7 +414,7 @@ export default function NovoPedido() {
                     ) : (
                       <>
                         <Send className="w-4 h-4 mr-2" />
-                        Criar Pedido
+                        Confirmar Pedido
                       </>
                     )}
                   </Button>

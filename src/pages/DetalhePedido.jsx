@@ -360,14 +360,39 @@ export default function DetalhePedido() {
               </CardContent>
             </Card>
 
-            {/* Value */}
-            {pedido.valor_estimado && (
+            {/* Value & Payment */}
+            {pedido.valor_total && (
               <Card className="border-slate-100 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 text-white">
-                <CardContent className="p-6 text-center">
-                  <p className="text-orange-100 text-sm mb-1">Valor Estimado</p>
-                  <p className="text-3xl font-bold">
-                    R$ {pedido.valor_estimado.toFixed(2)}
+                <CardContent className="p-6">
+                  <p className="text-orange-100 text-sm mb-1">Valor Total</p>
+                  <p className="text-3xl font-bold mb-4">
+                    R$ {pedido.valor_total.toFixed(2)}
                   </p>
+                  {pedido.metodo_pagamento && (
+                    <div className="pt-3 border-t border-orange-400/30">
+                      <p className="text-orange-100 text-xs mb-1">Método de Pagamento</p>
+                      <p className="font-semibold">
+                        {pedido.metodo_pagamento === 'pix' ? '💳 PIX' :
+                         pedido.metodo_pagamento === 'cartao_credito' ? '💳 Cartão de Crédito' :
+                         pedido.metodo_pagamento === 'cartao_debito' ? '💳 Cartão de Débito' :
+                         '💵 Dinheiro'}
+                      </p>
+                    </div>
+                  )}
+                  {pedido.status_pagamento && (
+                    <div className="mt-3 pt-3 border-t border-orange-400/30">
+                      <p className="text-orange-100 text-xs mb-1">Status do Pagamento</p>
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
+                        pedido.status_pagamento === 'pago' ? 'bg-green-500' :
+                        pedido.status_pagamento === 'estornado' ? 'bg-red-500' :
+                        'bg-yellow-500'
+                      }`}>
+                        {pedido.status_pagamento === 'pago' ? '✓ Pago' :
+                         pedido.status_pagamento === 'estornado' ? '✗ Estornado' :
+                         '⏱ Pendente'}
+                      </span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}

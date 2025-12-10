@@ -67,9 +67,9 @@ export default function PedidoCard({ pedido, onClick }) {
             </span>
           )}
         </div>
-        {pedido.valor_estimado && (
+        {pedido.valor_total && (
           <span className="font-semibold text-slate-800">
-            R$ {pedido.valor_estimado.toFixed(2)}
+            R$ {pedido.valor_total.toFixed(2)}
           </span>
         )}
       </div>
