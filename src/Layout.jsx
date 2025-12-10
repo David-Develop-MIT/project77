@@ -18,10 +18,11 @@ export default function Layout({ children }) {
     retry: false
   });
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     toast.success('Até logo!');
-    setTimeout(() => {
-      base44.auth.logout();
+    setTimeout(async () => {
+      await base44.auth.logout();
+      base44.auth.redirectToLogin();
     }, 500);
   };
 
