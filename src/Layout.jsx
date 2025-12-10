@@ -1,13 +1,29 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Home, Package, Plus, Menu, X } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { Home, Package, Plus, Menu, X, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const location = useLocation();
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+    retry: false
+  });
+
+  const handleLogout = () => {
+    toast.success('Até logo!');
+    setTimeout(() => {
+      base44.auth.logout();
+    }, 500);
+  };
 
   const navItems = [
     { name: 'Home', icon: Home, page: 'Home' },
@@ -69,6 +85,31 @@ export default function Layout({ children }) {
                     </Button>
                   </Link>
                 ))}
+                
+                <div className="pt-2 border-t border-slate-100">
+                  {user && (
+                    <div className="px-3 py-2 mb-2 bg-slate-50 rounded-xl">
+                      <div className="flex items-center gap-2 mb-1">
+                        <User className="w-4 h-4 text-slate-400" />
+                        <p className="text-sm font-medium text-slate-700 truncate">
+                          {user.full_name || user.email}
+                        </p>
+                      </div>
+                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                    </div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                  >
+                    <LogOut className="w-5 h-5 mr-3" />
+                    Sair da Conta
+                  </Button>
+                </div>
               </nav>
             </motion.div>
           )}
@@ -102,7 +143,26 @@ export default function Layout({ children }) {
           ))}
         </nav>
 
-        <div className="pt-4 border-t border-slate-100">
+        <div className="pt-4 border-t border-slate-100 space-y-3">
+          {user && (
+            <div className="px-3 py-2 bg-slate-50 rounded-xl">
+              <div className="flex items-center gap-2 mb-1">
+                <User className="w-4 h-4 text-slate-400" />
+                <p className="text-sm font-medium text-slate-700 truncate">
+                  {user.full_name || user.email}
+                </p>
+              </div>
+              <p className="text-xs text-slate-500 truncate">{user.email}</p>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            onClick={handleLogout}
+            className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl"
+          >
+            <LogOut className="w-4 h-4 mr-3" />
+            Sair da Conta
+          </Button>
           <p className="text-xs text-slate-400 text-center">
             © 2024 Sistema de Entregas
           </p>
