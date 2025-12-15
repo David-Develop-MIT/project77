@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, MapPin, User, Phone, Calendar, Clock, FileText, Send, Loader2, DollarSign, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, MapPin, User, Phone, Calendar, Clock, FileText, Send, Loader2, DollarSign, CheckCircle2, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,6 +13,7 @@ import ServiceCard from '@/components/ServiceCard';
 import AddressForm from '@/components/AddressForm';
 import PaymentMethodCard from '@/components/PaymentMethodCard';
 import { servicoConfig } from '@/components/servicoConfig';
+import { calcularDistanciaEPreco } from '@/components/CalculadoraDistancia';
 import { toast } from 'sonner';
 
 export default function NovoPedido() {
@@ -22,6 +23,7 @@ export default function NovoPedido() {
   
   const [step, setStep] = useState(1);
   const totalSteps = 4;
+  const [calculando, setCalculando] = useState(false);
   const [formData, setFormData] = useState({
     tipo_servico: tipoInicial || '',
     nome_cliente: '',
@@ -34,6 +36,9 @@ export default function NovoPedido() {
     endereco_destino: '',
     numero_destino: '',
     complemento_destino: '',
+    distancia_km: null,
+    tempo_estimado: null,
+    valor_calculado: null,
     data_agendada: '',
     horario: '',
     descricao: '',
@@ -42,6 +47,11 @@ export default function NovoPedido() {
     metodo_pagamento: '',
     status_pagamento: 'pendente',
     status: 'pendente'
+  });
+
+  const { data: precos = [] } = useQuery({
+    queryKey: ['precos'],
+    queryFn: () => base44.entities.TabelaPreco.list()
   });
 
   useEffect(() => {
@@ -68,6 +78,60 @@ export default function NovoPedido() {
   const handleServiceSelect = (tipo) => {
     handleChange('tipo_servico', tipo);
     setStep(2);
+  };
+
+  const calcularPreco = async () => {
+    if (!formData.tipo_servico || !formData.endereco_origem || !formData.numero_origem) {
+      return;
+    }
+
+    const enderecoOrigem = `${formData.endereco_origem}, ${formData.numero_origem}${formData.complemento_origem ? ', ' + formData.complemento_origem : ''}, CEP ${formData.cep_origem}`;
+    const enderecoDestino = formData.endereco_destino && formData.numero_destino
+      ? `${formData.endereco_destino}, ${formData.numero_destino}${formData.complemento_destino ? ', ' + formData.complemento_destino : ''}, CEP ${formData.cep_destino}`
+      : '';
+
+    if (!needsDestination || !enderecoDestino) {
+      const tabelaPreco = precos.find(p => p.tipo_servico === formData.tipo_servico && p.ativo);
+      if (tabelaPreco) {
+        setFormData(prev => ({
+          ...prev,
+          distancia_km: 0,
+          tempo_estimado: 'N/A',
+          valor_calculado: tabelaPreco.valor_minimo,
+          valor_total: tabelaPreco.valor_minimo
+        }));
+      }
+      return;
+    }
+
+    setCalculando(true);
+    toast.loading('Calculando distância e preço...', { id: 'calc' });
+
+    try {
+      const resultado = await calcularDistanciaEPreco(
+        enderecoOrigem,
+        enderecoDestino,
+        formData.tipo_servico,
+        precos
+      );
+
+      if (resultado.erro) {
+        toast.error(resultado.erro, { id: 'calc' });
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          distancia_km: resultado.distancia_km,
+          tempo_estimado: resultado.tempo_estimado,
+          valor_calculado: resultado.valor_calculado,
+          valor_total: resultado.valor_calculado
+        }));
+        toast.success('Preço calculado com sucesso!', { id: 'calc' });
+      }
+    } catch (error) {
+      toast.error('Erro ao calcular preço', { id: 'calc' });
+    } finally {
+      setCalculando(false);
+    }
   };
 
   const handleSubmit = () => {
@@ -219,7 +283,25 @@ export default function NovoPedido() {
                   />
                 )}
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-end gap-3 pt-4">
+                  <Button 
+                    onClick={calcularPreco}
+                    disabled={!formData.endereco_origem || !formData.numero_origem || calculando}
+                    variant="outline"
+                    className="rounded-xl"
+                  >
+                    {calculando ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Calculando...
+                      </>
+                    ) : (
+                      <>
+                        <Navigation className="w-4 h-4 mr-2" />
+                        Calcular Distância
+                      </>
+                    )}
+                  </Button>
                   <Button 
                     onClick={() => setStep(3)}
                     disabled={!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || !formData.numero_origem}
@@ -327,6 +409,38 @@ export default function NovoPedido() {
               <h2 className="text-lg font-semibold text-slate-800 mb-6">Pagamento</h2>
               
               <div className="space-y-6">
+                {/* Distância e Cálculo */}
+                {formData.distancia_km !== null && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-5 border border-blue-200"
+                  >
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <p className="text-xs text-blue-600 mb-1">Distância</p>
+                        <p className="text-2xl font-bold text-blue-700">
+                          {formData.distancia_km} km
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-blue-600 mb-1">Tempo Estimado</p>
+                        <p className="text-lg font-semibold text-blue-700">
+                          {formData.tempo_estimado}
+                        </p>
+                      </div>
+                    </div>
+                    {formData.valor_calculado && (
+                      <div className="pt-3 border-t border-blue-300">
+                        <p className="text-xs text-blue-600 mb-1">Valor Calculado</p>
+                        <p className="text-2xl font-bold text-blue-700">
+                          R$ {formData.valor_calculado.toFixed(2)}
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+
                 {/* Valor */}
                 <div className="space-y-2">
                   <Label className="text-slate-700 flex items-center gap-2">
@@ -348,7 +462,7 @@ export default function NovoPedido() {
                     />
                   </div>
                   <p className="text-xs text-slate-500">
-                    Informe o valor total do serviço
+                    {formData.valor_calculado ? 'Valor calculado automaticamente (pode ser ajustado)' : 'Informe o valor total do serviço'}
                   </p>
                 </div>
 

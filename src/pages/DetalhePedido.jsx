@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, MapPin, User, Phone, Calendar, Clock, FileText, 
-  Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2
+  Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2, Navigation
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -170,6 +170,34 @@ export default function DetalhePedido() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Distância e Tempo */}
+                {(pedido.distancia_km !== null && pedido.distancia_km !== undefined) && (
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Navigation className="w-4 h-4 text-blue-600" />
+                          <p className="text-xs text-blue-600 font-medium">Distância</p>
+                        </div>
+                        <p className="text-2xl font-bold text-blue-700">
+                          {pedido.distancia_km} km
+                        </p>
+                      </div>
+                      {pedido.tempo_estimado && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Clock className="w-4 h-4 text-blue-600" />
+                            <p className="text-xs text-blue-600 font-medium">Tempo</p>
+                          </div>
+                          <p className="text-lg font-semibold text-blue-700">
+                            {pedido.tempo_estimado}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="flex items-start gap-3 p-4 bg-slate-50 rounded-xl">
                     <MapPin className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
@@ -365,9 +393,14 @@ export default function DetalhePedido() {
               <Card className="border-slate-100 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 text-white">
                 <CardContent className="p-6">
                   <p className="text-orange-100 text-sm mb-1">Valor Total</p>
-                  <p className="text-3xl font-bold mb-4">
+                  <p className="text-3xl font-bold mb-2">
                     R$ {pedido.valor_total.toFixed(2)}
                   </p>
+                  {pedido.valor_calculado && pedido.valor_calculado !== pedido.valor_total && (
+                    <p className="text-orange-100 text-xs">
+                      (Calculado: R$ {pedido.valor_calculado.toFixed(2)})
+                    </p>
+                  )}
                   {pedido.metodo_pagamento && (
                     <div className="pt-3 border-t border-orange-400/30">
                       <p className="text-orange-100 text-xs mb-1">Método de Pagamento</p>
