@@ -152,6 +152,14 @@ export default function NovoPedido() {
 
   const needsDestination = ['motoboy', 'carreto', 'mudanca', 'comida', 'frete'].includes(formData.tipo_servico);
 
+  // Auto-calcular quando mudar de step 2 para 3
+  const handleContinueToStep3 = async () => {
+    if (!formData.valor_calculado && formData.endereco_origem && formData.numero_origem) {
+      await calcularPreco();
+    }
+    setStep(3);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
@@ -303,12 +311,21 @@ export default function NovoPedido() {
                     )}
                   </Button>
                   <Button 
-                    onClick={() => setStep(3)}
-                    disabled={!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || !formData.numero_origem}
+                    onClick={handleContinueToStep3}
+                    disabled={!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || !formData.numero_origem || calculando}
                     className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-6"
                   >
-                    Continuar
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    {calculando ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Calculando...
+                      </>
+                    ) : (
+                      <>
+                        Continuar
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
