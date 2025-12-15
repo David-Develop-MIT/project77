@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { Home, Package, Plus, Menu, X, LogOut, User } from 'lucide-react';
+import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -29,7 +29,8 @@ export default function Layout({ children }) {
   const navItems = [
     { name: 'Home', icon: Home, page: 'Home' },
     { name: 'Pedidos', icon: Package, page: 'MeusPedidos' },
-    { name: 'Novo', icon: Plus, page: 'NovoPedido' }
+    { name: 'Novo', icon: Plus, page: 'NovoPedido' },
+    { name: 'Preços', icon: DollarSign, page: 'TabelaPrecos' }
   ];
 
   const isActive = (page) => {
