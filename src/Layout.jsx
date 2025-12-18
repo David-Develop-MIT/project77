@@ -30,6 +30,7 @@ export default function Layout({ children }) {
     { name: 'Home', icon: Home, page: 'Home' },
     { name: 'Pedidos', icon: Package, page: 'MeusPedidos' },
     { name: 'Novo', icon: Plus, page: 'NovoPedido' },
+    { name: 'Motoristas', icon: User, page: 'Motoristas' },
     { name: 'Preços', icon: DollarSign, page: 'TabelaPrecos' }
   ];
 
