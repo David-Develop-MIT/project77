@@ -122,14 +122,33 @@ export default function Layout({ children }) {
                 <div className="pt-2 border-t border-slate-100">
                   {user && (
                     <div className="px-3 py-2 mb-2 bg-slate-50 rounded-xl">
-                      <div className="flex items-center gap-2 mb-1">
-                        <User className="w-4 h-4 text-slate-400" />
-                        <p className="text-sm font-medium text-slate-700 truncate">
-                          {user.full_name || user.email}
-                        </p>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-slate-400" />
+                          <p className="text-sm font-medium text-slate-700 truncate">
+                            {user.full_name || user.email}
+                          </p>
+                        </div>
+                        <Badge className={modoAtivo === 'motorista' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}>
+                          {modoAtivo === 'motorista' ? '🚗' : '👤'}
+                        </Badge>
                       </div>
                       <p className="text-xs text-slate-500 truncate">{user.email}</p>
                     </div>
+                  )}
+                  {temAmbos && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        alternarModoMutation.mutate(modoAtivo === 'cliente' ? 'motorista' : 'cliente');
+                      }}
+                      className="w-full justify-start rounded-xl mb-2"
+                      disabled={alternarModoMutation.isPending}
+                    >
+                      <RefreshCw className="w-5 h-5 mr-3" />
+                      Modo {modoAtivo === 'cliente' ? 'Motorista' : 'Cliente'}
+                    </Button>
                   )}
                   <Button
                     variant="ghost"
