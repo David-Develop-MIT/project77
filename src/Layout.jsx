@@ -1,22 +1,44 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign } from 'lucide-react';
+import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign, Truck, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
     retry: false
   });
+
+  const alternarModoMutation = useMutation({
+    mutationFn: (novoModo) => base44.auth.updateMe({ modo_ativo: novoModo }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(['currentUser']);
+      toast.success('Modo alterado!');
+      navigate(createPageUrl('Home'));
+    }
+  });
+
+  // Redirecionar para escolha de perfil se necessário
+  React.useEffect(() => {
+    if (user && !user.tipos_conta?.length && location.pathname !== createPageUrl('EscolherPerfil')) {
+      navigate(createPageUrl('EscolherPerfil'));
+    }
+  }, [user, location, navigate]);
+
+  const modoAtivo = user?.modo_ativo || 'cliente';
+  const temAmbos = user?.tipos_conta?.length > 1;
 
   const handleLogout = async () => {
     toast.success('Até logo!');
@@ -26,13 +48,21 @@ export default function Layout({ children }) {
     }, 500);
   };
 
-  const navItems = [
+  const navItemsCliente = [
     { name: 'Home', icon: Home, page: 'Home' },
     { name: 'Pedidos', icon: Package, page: 'MeusPedidos' },
     { name: 'Novo', icon: Plus, page: 'NovoPedido' },
     { name: 'Motoristas', icon: User, page: 'Motoristas' },
     { name: 'Preços', icon: DollarSign, page: 'TabelaPrecos' }
   ];
+
+  const navItemsMotorista = [
+    { name: 'Home', icon: Home, page: 'Home' },
+    { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
+    { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' }
+  ];
+
+  const navItems = modoAtivo === 'motorista' ? navItemsMotorista : navItemsCliente;
 
   const isActive = (page) => {
     const pageUrl = createPageUrl(page);
@@ -149,14 +179,30 @@ export default function Layout({ children }) {
         <div className="pt-4 border-t border-slate-100 space-y-3">
           {user && (
             <div className="px-3 py-2 bg-slate-50 rounded-xl">
-              <div className="flex items-center gap-2 mb-1">
-                <User className="w-4 h-4 text-slate-400" />
-                <p className="text-sm font-medium text-slate-700 truncate">
-                  {user.full_name || user.email}
-                </p>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-slate-400" />
+                  <p className="text-sm font-medium text-slate-700 truncate">
+                    {user.full_name || user.email}
+                  </p>
+                </div>
+                <Badge className={modoAtivo === 'motorista' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}>
+                  {modoAtivo === 'motorista' ? '🚗 Motorista' : '👤 Cliente'}
+                </Badge>
               </div>
               <p className="text-xs text-slate-500 truncate">{user.email}</p>
             </div>
+          )}
+          {temAmbos && (
+            <Button
+              variant="outline"
+              onClick={() => alternarModoMutation.mutate(modoAtivo === 'cliente' ? 'motorista' : 'cliente')}
+              className="w-full justify-start rounded-xl"
+              disabled={alternarModoMutation.isPending}
+            >
+              <RefreshCw className="w-4 h-4 mr-3" />
+              Alternar para {modoAtivo === 'cliente' ? 'Motorista' : 'Cliente'}
+            </Button>
           )}
           <Button
             variant="ghost"
