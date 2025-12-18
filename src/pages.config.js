@@ -9,6 +9,7 @@ import DetalheMotorista from './pages/DetalheMotorista';
 import EscolherPerfil from './pages/EscolherPerfil';
 import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import MeusPedidosMotorista from './pages/MeusPedidosMotorista';
+import TornarseMotorista from './pages/TornarseMotorista';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "EscolherPerfil": EscolherPerfil,
     "PedidosDisponiveis": PedidosDisponiveis,
     "MeusPedidosMotorista": MeusPedidosMotorista,
+    "TornarseMotorista": TornarseMotorista,
 }
 
 export const pagesConfig = {
