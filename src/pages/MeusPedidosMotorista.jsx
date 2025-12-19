@@ -3,16 +3,18 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { motion } from 'framer-motion';
-import { Package, MapPin, Clock, Navigation, DollarSign } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Package, MapPin, Clock, Navigation, DollarSign, Route } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/StatusBadge';
 import { servicoConfig } from '@/components/servicoConfig';
+import OtimizadorRotas from '@/components/OtimizadorRotas';
 
 export default function MeusPedidosMotorista() {
   const [filtro, setFiltro] = React.useState('em_andamento');
+  const [mostrarOtimizador, setMostrarOtimizador] = React.useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -30,10 +32,20 @@ export default function MeusPedidosMotorista() {
   });
 
   const pedidosFiltrados = pedidos.filter(p => {
-    if (filtro === 'em_andamento') return p.status === 'em_andamento' || p.status === 'confirmado';
+    if (filtro === 'em_andamento') return p.status === 'em_andamento' || p.status === 'confirmado' || p.status === 'em_rota';
     if (filtro === 'concluido') return p.status === 'concluido';
     return true;
+  }).sort((a, b) => {
+    // Ordenar por ordem_rota se estiver em rota
+    if (a.status === 'em_rota' && b.status === 'em_rota') {
+      return (a.ordem_rota || 0) - (b.ordem_rota || 0);
+    }
+    return 0;
   });
+
+  const pedidosParaOtimizar = pedidos.filter(p => 
+    p.status === 'em_andamento' || p.status === 'confirmado'
+  );
 
   const totalGanho = pedidos
     .filter(p => p.status === 'concluido' && p.valor_total)
@@ -71,13 +83,25 @@ export default function MeusPedidosMotorista() {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <Tabs value={filtro} onValueChange={setFiltro}>
-            <TabsList className="bg-slate-100 rounded-xl p-1">
-              <TabsTrigger value="em_andamento" className="rounded-lg">Em Andamento</TabsTrigger>
-              <TabsTrigger value="concluido" className="rounded-lg">Concluídos</TabsTrigger>
-              <TabsTrigger value="todos" className="rounded-lg">Todos</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <Tabs value={filtro} onValueChange={setFiltro}>
+              <TabsList className="bg-slate-100 rounded-xl p-1">
+                <TabsTrigger value="em_andamento" className="rounded-lg">Em Andamento</TabsTrigger>
+                <TabsTrigger value="concluido" className="rounded-lg">Concluídos</TabsTrigger>
+                <TabsTrigger value="todos" className="rounded-lg">Todos</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            
+            {pedidosParaOtimizar.length >= 2 && filtro === 'em_andamento' && (
+              <Button
+                onClick={() => setMostrarOtimizador(true)}
+                className="bg-purple-500 hover:bg-purple-600 text-white rounded-xl"
+              >
+                <Route className="w-4 h-4 mr-2" />
+                Otimizar Rota ({pedidosParaOtimizar.length})
+              </Button>
+            )}
+          </div>
         </motion.div>
 
         {isLoading ? (
@@ -135,6 +159,11 @@ export default function MeusPedidosMotorista() {
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
+                            {pedido.status === 'em_rota' && pedido.ordem_rota && (
+                              <div className="w-8 h-8 rounded-full bg-purple-500 text-white flex items-center justify-center font-bold text-sm flex-shrink-0">
+                                {pedido.ordem_rota}
+                              </div>
+                            )}
                             <div 
                               className="w-11 h-11 rounded-xl flex items-center justify-center"
                               style={{ backgroundColor: `${servico?.color}15` }}
@@ -198,6 +227,15 @@ export default function MeusPedidosMotorista() {
             })}
           </div>
         )}
+
+        <AnimatePresence>
+          {mostrarOtimizador && (
+            <OtimizadorRotas 
+              pedidos={pedidosParaOtimizar}
+              onClose={() => setMostrarOtimizador(false)}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

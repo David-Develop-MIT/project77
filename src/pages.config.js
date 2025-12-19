@@ -1,30 +1,30 @@
+import DetalheMotorista from './pages/DetalheMotorista';
 import DetalhePedido from './pages/DetalhePedido';
+import EscolherPerfil from './pages/EscolherPerfil';
 import Home from './pages/Home';
 import MeusPedidos from './pages/MeusPedidos';
-import NovoPedido from './pages/NovoPedido';
-import TabelaPrecos from './pages/TabelaPrecos';
+import MeusPedidosMotorista from './pages/MeusPedidosMotorista';
 import Motoristas from './pages/Motoristas';
 import NovoMotorista from './pages/NovoMotorista';
-import DetalheMotorista from './pages/DetalheMotorista';
-import EscolherPerfil from './pages/EscolherPerfil';
+import NovoPedido from './pages/NovoPedido';
 import PedidosDisponiveis from './pages/PedidosDisponiveis';
-import MeusPedidosMotorista from './pages/MeusPedidosMotorista';
+import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "DetalheMotorista": DetalheMotorista,
     "DetalhePedido": DetalhePedido,
+    "EscolherPerfil": EscolherPerfil,
     "Home": Home,
     "MeusPedidos": MeusPedidos,
-    "NovoPedido": NovoPedido,
-    "TabelaPrecos": TabelaPrecos,
+    "MeusPedidosMotorista": MeusPedidosMotorista,
     "Motoristas": Motoristas,
     "NovoMotorista": NovoMotorista,
-    "DetalheMotorista": DetalheMotorista,
-    "EscolherPerfil": EscolherPerfil,
+    "NovoPedido": NovoPedido,
     "PedidosDisponiveis": PedidosDisponiveis,
-    "MeusPedidosMotorista": MeusPedidosMotorista,
+    "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
 }
 
