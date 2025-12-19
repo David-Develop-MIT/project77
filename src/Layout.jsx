@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import NotificationBell from '@/components/NotificationBell';
+import AvaliacaoDisplay from '@/components/AvaliacaoDisplay';
 import { useNotifications } from '@/components/useNotifications';
 
 export default function Layout({ children }) {
@@ -147,6 +148,24 @@ export default function Layout({ children }) {
                         </Badge>
                       </div>
                       <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                      {modoAtivo === 'motorista' && user.avaliacao_media_motorista && (
+                        <div className="mt-2 pt-2 border-t border-slate-200">
+                          <AvaliacaoDisplay 
+                            nota={user.avaliacao_media_motorista}
+                            totalAvaliacoes={user.total_avaliacoes_motorista || 0}
+                            size="sm"
+                          />
+                        </div>
+                      )}
+                      {modoAtivo === 'cliente' && user.avaliacao_media_cliente && (
+                        <div className="mt-2 pt-2 border-t border-slate-200">
+                          <AvaliacaoDisplay 
+                            nota={user.avaliacao_media_cliente}
+                            totalAvaliacoes={user.total_avaliacoes_cliente || 0}
+                            size="sm"
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                   {temAmbos && (
@@ -231,6 +250,24 @@ export default function Layout({ children }) {
                 </Badge>
               </div>
               <p className="text-xs text-slate-500 truncate">{user.email}</p>
+              {modoAtivo === 'motorista' && user.avaliacao_media_motorista && (
+                <div className="mt-2 pt-2 border-t border-slate-200">
+                  <AvaliacaoDisplay 
+                    nota={user.avaliacao_media_motorista}
+                    totalAvaliacoes={user.total_avaliacoes_motorista || 0}
+                    size="sm"
+                  />
+                </div>
+              )}
+              {modoAtivo === 'cliente' && user.avaliacao_media_cliente && (
+                <div className="mt-2 pt-2 border-t border-slate-200">
+                  <AvaliacaoDisplay 
+                    nota={user.avaliacao_media_cliente}
+                    totalAvaliacoes={user.total_avaliacoes_cliente || 0}
+                    size="sm"
+                  />
+                </div>
+              )}
             </div>
           )}
           {temAmbos && (
