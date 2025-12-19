@@ -16,7 +16,9 @@ export default function MeusPedidos() {
 
   const { data: pedidos = [], isLoading } = useQuery({
     queryKey: ['pedidos'],
-    queryFn: () => base44.entities.Pedido.list('-created_date', 100)
+    queryFn: () => base44.entities.Pedido.list('-created_date', 100),
+    refetchInterval: 20000, // Atualizar automaticamente a cada 20s
+    refetchOnWindowFocus: true
   });
 
   const pedidosFiltrados = pedidos.filter(pedido => {
