@@ -5,10 +5,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, MapPin, User, Phone, Calendar, Clock, FileText, 
-  Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2, Navigation
+  Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2, Navigation, Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,14 +27,22 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import StatusBadge from '@/components/StatusBadge';
+import AvaliacaoModal from '@/components/AvaliacaoModal';
+import AvaliacaoDisplay from '@/components/AvaliacaoDisplay';
 import { servicoConfig } from '@/components/servicoConfig';
 import { toast } from 'sonner';
 
 export default function DetalhePedido() {
+  const [showAvaliacaoModal, setShowAvaliacaoModal] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
   const pedidoId = urlParams.get('id');
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
 
   const { data: pedido, isLoading } = useQuery({
     queryKey: ['pedido', pedidoId],
@@ -43,6 +51,26 @@ export default function DetalhePedido() {
       return pedidos.find(p => p.id === pedidoId);
     },
     enabled: !!pedidoId
+  });
+
+  const { data: minhaAvaliacao } = useQuery({
+    queryKey: ['minha-avaliacao', pedidoId, user?.email],
+    queryFn: async () => {
+      if (!user?.email) return null;
+      const avaliacoes = await base44.entities.Avaliacao.list();
+      return avaliacoes.find(a => a.pedido_id === pedidoId && a.avaliador_email === user.email);
+    },
+    enabled: !!pedidoId && !!user && pedido?.status === 'concluido'
+  });
+
+  const { data: avaliacaoRecebida } = useQuery({
+    queryKey: ['avaliacao-recebida', pedidoId, user?.email],
+    queryFn: async () => {
+      if (!user?.email) return null;
+      const avaliacoes = await base44.entities.Avaliacao.list();
+      return avaliacoes.find(a => a.pedido_id === pedidoId && a.avaliado_email === user.email);
+    },
+    enabled: !!pedidoId && !!user && pedido?.status === 'concluido'
   });
 
   const updateMutation = useMutation({
@@ -62,9 +90,68 @@ export default function DetalhePedido() {
     }
   });
 
-  const handleStatusChange = (newStatus) => {
+  const handleStatusChange = async (newStatus) => {
     updateMutation.mutate({ id: pedidoId, data: { status: newStatus } });
+    
+    // Se marcar como concluído, calcular e atualizar médias de avaliação
+    if (newStatus === 'concluido') {
+      setTimeout(async () => {
+        await atualizarMediasAvaliacao();
+      }, 1000);
+    }
   };
+
+  const atualizarMediasAvaliacao = async () => {
+    try {
+      const avaliacoes = await base44.entities.Avaliacao.list();
+      
+      // Atualizar média do cliente
+      const avaliacoesCliente = avaliacoes.filter(a => a.avaliado_email === pedido.created_by);
+      if (avaliacoesCliente.length > 0) {
+        const mediaCliente = avaliacoesCliente.reduce((acc, a) => acc + a.nota, 0) / avaliacoesCliente.length;
+        await base44.entities.User.update(pedido.created_by, {
+          avaliacao_media_cliente: mediaCliente,
+          total_avaliacoes_cliente: avaliacoesCliente.length
+        });
+      }
+      
+      // Atualizar média do motorista se houver
+      if (pedido.motorista_id) {
+        const motoristas = await base44.entities.Motorista.list();
+        const motorista = motoristas.find(m => m.id === pedido.motorista_id);
+        if (motorista) {
+          const avaliacoesMotorista = avaliacoes.filter(a => a.avaliado_email === motorista.created_by);
+          if (avaliacoesMotorista.length > 0) {
+            const mediaMotorista = avaliacoesMotorista.reduce((acc, a) => acc + a.nota, 0) / avaliacoesMotorista.length;
+            await base44.entities.User.update(motorista.created_by, {
+              avaliacao_media_motorista: mediaMotorista,
+              total_avaliacoes_motorista: avaliacoesMotorista.length
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar médias:', error);
+    }
+  };
+
+  const isCliente = user?.email === pedido?.created_by;
+  const isMotorista = user?.motorista_id === pedido?.motorista_id;
+  const podeAvaliar = pedido?.status === 'concluido' && !minhaAvaliacao;
+  
+  let avaliadoEmail = null;
+  let avaliadoNome = null;
+  let tipoAvaliador = null;
+  
+  if (isCliente && pedido?.motorista_nome) {
+    avaliadoNome = pedido.motorista_nome;
+    tipoAvaliador = 'cliente';
+    // Buscar email do motorista
+  } else if (isMotorista) {
+    avaliadoEmail = pedido?.created_by;
+    avaliadoNome = pedido?.nome_cliente;
+    tipoAvaliador = 'motorista';
+  }
 
   if (isLoading) {
     return (
@@ -388,6 +475,58 @@ export default function DetalhePedido() {
               </CardContent>
             </Card>
 
+            {/* Avaliações */}
+            {pedido.status === 'concluido' && (isCliente || isMotorista) && (
+              <Card className="border-slate-100 rounded-2xl">
+                <CardHeader>
+                  <CardTitle className="text-lg">Avaliação</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {avaliacaoRecebida && (
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl">
+                      <p className="text-xs text-blue-600 mb-2 font-medium">Você recebeu uma avaliação</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Star
+                            key={i}
+                            className={`w-5 h-5 ${i <= avaliacaoRecebida.nota ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`}
+                          />
+                        ))}
+                      </div>
+                      {avaliacaoRecebida.comentario && (
+                        <p className="text-sm text-slate-700 italic">"{avaliacaoRecebida.comentario}"</p>
+                      )}
+                    </div>
+                  )}
+
+                  {podeAvaliar ? (
+                    <Button
+                      onClick={() => setShowAvaliacaoModal(true)}
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
+                    >
+                      <Star className="w-4 h-4 mr-2" />
+                      Avaliar {isCliente ? 'Motorista' : 'Cliente'}
+                    </Button>
+                  ) : minhaAvaliacao ? (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+                      <p className="text-xs text-green-600 mb-2 font-medium">Sua avaliação</p>
+                      <div className="flex items-center gap-2 mb-2">
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <Star
+                            key={i}
+                            className={`w-5 h-5 ${i <= minhaAvaliacao.nota ? 'fill-yellow-400 text-yellow-400' : 'text-slate-300'}`}
+                          />
+                        ))}
+                      </div>
+                      {minhaAvaliacao.comentario && (
+                        <p className="text-sm text-slate-700 italic">"{minhaAvaliacao.comentario}"</p>
+                      )}
+                    </div>
+                  ) : null}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Value & Payment */}
             {pedido.valor_total && (
               <Card className="border-slate-100 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 text-white">
@@ -431,6 +570,18 @@ export default function DetalhePedido() {
             )}
           </motion.div>
         </div>
+
+        <AnimatePresence>
+          {showAvaliacaoModal && podeAvaliar && (
+            <AvaliacaoModal
+              pedido={pedido}
+              onClose={() => setShowAvaliacaoModal(false)}
+              tipoAvaliador={tipoAvaliador}
+              avaliadoEmail={avaliadoEmail || pedido.created_by}
+              avaliadoNome={avaliadoNome}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
