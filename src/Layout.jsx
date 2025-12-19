@@ -63,7 +63,8 @@ export default function Layout({ children }) {
   const navItemsMotorista = [
     { name: 'Home', icon: Home, page: 'Home' },
     { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
-    { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' }
+    { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
+    { name: 'Meus Veículos', icon: Truck, page: 'MeusVeiculos' }
   ];
 
   const navItems = modoAtivo === 'motorista' ? navItemsMotorista : navItemsCliente;
