@@ -4,10 +4,11 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Package, MapPin, Clock, Navigation, DollarSign, Route } from 'lucide-react';
+import { Package, MapPin, Clock, Navigation, DollarSign, Route, Car } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import StatusBadge from '@/components/StatusBadge';
 import { servicoConfig } from '@/components/servicoConfig';
 import OtimizadorRotas from '@/components/OtimizadorRotas';
@@ -19,6 +20,16 @@ export default function MeusPedidosMotorista() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
+  });
+
+  const { data: veiculoAtivo } = useQuery({
+    queryKey: ['veiculo-ativo', user?.veiculo_ativo_id],
+    queryFn: async () => {
+      if (!user?.veiculo_ativo_id) return null;
+      const veiculos = await base44.entities.Veiculo.list();
+      return veiculos.find(v => v.id === user.veiculo_ativo_id);
+    },
+    enabled: !!user?.veiculo_ativo_id
   });
 
   const { data: pedidos = [], isLoading } = useQuery({
@@ -64,10 +75,18 @@ export default function MeusPedidosMotorista() {
           <h1 className="text-3xl font-bold text-slate-800 mb-2">
             Minhas Entregas
           </h1>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <p className="text-slate-500">
               {pedidos.length} entregas no total
             </p>
+            {veiculoAtivo && (
+              <Link to={createPageUrl('MeusVeiculos')}>
+                <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 cursor-pointer">
+                  <Car className="w-3 h-3 mr-1" />
+                  {veiculoAtivo.placa} - {veiculoAtivo.modelo}
+                </Badge>
+              </Link>
+            )}
             {totalGanho > 0 && (
               <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-2">
                 <p className="text-xs text-green-600">Total Ganho</p>
