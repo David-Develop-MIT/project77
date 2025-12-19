@@ -71,13 +71,6 @@ export function useNotifications() {
           }
         );
       });
-
-      // Tocar som de notificação se disponível
-      try {
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBVio5O+qWRQKXLbs0ppFCB';
-        audio.volume = 0.3;
-        audio.play().catch(() => {});
-      } catch (e) {}
     }
 
     previousPedidosRef.current = pedidosDisponiveis.map(p => p.id);
