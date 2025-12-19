@@ -8,12 +8,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import NotificationBell from '@/components/NotificationBell';
+import { useNotifications } from '@/components/useNotifications';
 
 export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  
+  // Sistema de notificações em tempo real
+  const { pedidosDisponiveis, hasNewNotifications } = useNotifications();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -79,14 +84,22 @@ export default function Layout({ children }) {
             </div>
             <span className="font-bold text-slate-800">Entregas</span>
           </Link>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="rounded-xl"
-          >
-            {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
+          <div className="flex items-center gap-2">
+            {modoAtivo === 'motorista' && (
+              <NotificationBell 
+                count={pedidosDisponiveis.length}
+                onClick={() => navigate(createPageUrl('PedidosDisponiveis'))}
+              />
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="rounded-xl"
+            >
+              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
         
         <AnimatePresence>
@@ -169,12 +182,20 @@ export default function Layout({ children }) {
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-100 flex-col p-4 z-50">
-        <Link to={createPageUrl('Home')} className="flex items-center gap-3 mb-8 px-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-            <Package className="w-6 h-6 text-white" />
-          </div>
-          <span className="font-bold text-xl text-slate-800">Entregas</span>
-        </Link>
+        <div className="flex items-center justify-between mb-8 px-2">
+          <Link to={createPageUrl('Home')} className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+              <Package className="w-6 h-6 text-white" />
+            </div>
+            <span className="font-bold text-xl text-slate-800">Entregas</span>
+          </Link>
+          {modoAtivo === 'motorista' && (
+            <NotificationBell 
+              count={pedidosDisponiveis.length}
+              onClick={() => navigate(createPageUrl('PedidosDisponiveis'))}
+            />
+          )}
+        </div>
 
         <nav className="flex-1 space-y-2">
           {navItems.map(item => (

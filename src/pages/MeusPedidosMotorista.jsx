@@ -28,7 +28,9 @@ export default function MeusPedidosMotorista() {
       const todos = await base44.entities.Pedido.list('-created_date', 100);
       return todos.filter(p => p.motorista_id === user.motorista_id);
     },
-    enabled: !!user?.motorista_id
+    enabled: !!user?.motorista_id,
+    refetchInterval: 20000, // Atualizar automaticamente a cada 20s
+    refetchOnWindowFocus: true
   });
 
   const pedidosFiltrados = pedidos.filter(p => {

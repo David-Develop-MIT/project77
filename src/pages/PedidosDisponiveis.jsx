@@ -24,7 +24,9 @@ export default function PedidosDisponiveis() {
     queryFn: async () => {
       const todos = await base44.entities.Pedido.list('-created_date', 50);
       return todos.filter(p => p.status === 'pendente' || p.status === 'confirmado');
-    }
+    },
+    refetchInterval: 15000, // Atualizar automaticamente a cada 15s
+    refetchOnWindowFocus: true
   });
 
   const aceitarMutation = useMutation({
