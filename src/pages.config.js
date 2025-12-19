@@ -10,6 +10,7 @@ import NovoPedido from './pages/NovoPedido';
 import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
+import MeusVeiculos from './pages/MeusVeiculos';
 import __Layout from './Layout.jsx';
 
 
@@ -26,6 +27,7 @@ export const PAGES = {
     "PedidosDisponiveis": PedidosDisponiveis,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
+    "MeusVeiculos": MeusVeiculos,
 }
 
 export const pagesConfig = {
