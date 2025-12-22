@@ -65,6 +65,7 @@ export default function Layout({ children }) {
     { name: 'Home', icon: Home, page: 'Home' },
     { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
     { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
+    { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
     { name: 'Meus Veículos', icon: Truck, page: 'MeusVeiculos' }
   ];
 
