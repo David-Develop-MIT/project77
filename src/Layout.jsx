@@ -325,6 +325,6 @@ export default function Layout({ children }) {
         isOpen={notificationPanelOpen}
         onClose={() => setNotificationPanelOpen(false)}
       />
-      </div>
-      );
-      }
+    </div>
+  );
+}
