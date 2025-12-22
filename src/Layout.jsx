@@ -9,17 +9,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import NotificationBell from '@/components/NotificationBell';
+import NotificationPanel from '@/components/NotificationPanel';
 import AvaliacaoDisplay from '@/components/AvaliacaoDisplay';
 import { useNotifications } from '@/components/useNotifications';
 
 export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
+  const [notificationPanelOpen, setNotificationPanelOpen] = React.useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
   // Sistema de notificações em tempo real
-  const { pedidosDisponiveis, hasNewNotifications } = useNotifications();
+  const { totalNaoLidas, hasNewNotifications } = useNotifications();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -88,12 +90,11 @@ export default function Layout({ children }) {
             <span className="font-bold text-slate-800">Entregas</span>
           </Link>
           <div className="flex items-center gap-2">
-            {modoAtivo === 'motorista' && (
-              <NotificationBell 
-                count={pedidosDisponiveis.length}
-                onClick={() => navigate(createPageUrl('PedidosDisponiveis'))}
-              />
-            )}
+            <NotificationBell 
+              count={totalNaoLidas}
+              hasNew={hasNewNotifications}
+              onClick={() => setNotificationPanelOpen(true)}
+            />
             <Button 
               variant="ghost" 
               size="icon"
@@ -210,12 +211,11 @@ export default function Layout({ children }) {
             </div>
             <span className="font-bold text-xl text-slate-800">Entregas</span>
           </Link>
-          {modoAtivo === 'motorista' && (
-            <NotificationBell 
-              count={pedidosDisponiveis.length}
-              onClick={() => navigate(createPageUrl('PedidosDisponiveis'))}
-            />
-          )}
+          <NotificationBell 
+            count={totalNaoLidas}
+            hasNew={hasNewNotifications}
+            onClick={() => setNotificationPanelOpen(true)}
+          />
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -319,6 +319,12 @@ export default function Layout({ children }) {
       <main className="lg:ml-64 pt-16 lg:pt-0 pb-20 lg:pb-0">
         {children}
       </main>
-    </div>
-  );
-}
+
+      {/* Notification Panel */}
+      <NotificationPanel 
+        isOpen={notificationPanelOpen}
+        onClose={() => setNotificationPanelOpen(false)}
+      />
+      </div>
+      );
+      }

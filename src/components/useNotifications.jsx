@@ -3,6 +3,14 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
+const criarNotificacao = async (data) => {
+  try {
+    await base44.entities.Notificacao.create(data);
+  } catch (error) {
+    console.error('Erro ao criar notificação:', error);
+  }
+};
+
 export function useNotifications() {
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -11,11 +19,38 @@ export function useNotifications() {
   });
 
   const previousPedidosRef = useRef(null);
+  const previousMeusPedidosRef = useRef(null);
   const notifiedPedidosRef = useRef(new Set());
 
   const modoAtivo = user?.modo_ativo || 'cliente';
   const isMotorista = modoAtivo === 'motorista';
   const isCliente = modoAtivo === 'cliente';
+
+  // Buscar notificações não lidas
+  const { data: notificacoesNaoLidas = [] } = useQuery({
+    queryKey: ['notificacoes-nao-lidas', user?.email],
+    queryFn: async () => {
+      const todas = await base44.entities.Notificacao.list('-created_date', 50);
+      return todas.filter(n => n.usuario_email === user?.email && !n.lida);
+    },
+    enabled: !!user?.email,
+    refetchInterval: 30000
+  });
+
+  // Monitorar pedidos em andamento para motoristas
+  const { data: meusPedidosMotorista = [] } = useQuery({
+    queryKey: ['meus-pedidos-motorista-notif'],
+    queryFn: async () => {
+      const todos = await base44.entities.Pedido.list('-created_date', 50);
+      return todos.filter(p => 
+        p.motorista_id === user?.motorista_id && 
+        (p.status === 'em_andamento' || p.status === 'em_rota')
+      );
+    },
+    enabled: isMotorista && !!user?.motorista_id,
+    refetchInterval: 20000,
+    refetchOnWindowFocus: true
+  });
 
   // Monitorar pedidos para motoristas (novos pedidos disponíveis)
   const { data: pedidosDisponiveis = [] } = useQuery({
@@ -70,6 +105,17 @@ export function useNotifications() {
             }
           }
         );
+
+        // Criar notificação persistente
+        criarNotificacao({
+          usuario_email: user.email,
+          tipo: 'novo_pedido',
+          titulo: 'Novo pedido disponível',
+          descricao: `${pedido.tipo_servico} - ${pedido.nome_cliente} em ${pedido.endereco_origem}`,
+          pedido_id: pedido.id,
+          icone: '🚗',
+          cor: '#f97316'
+        });
       });
     }
 
@@ -80,23 +126,23 @@ export function useNotifications() {
   useEffect(() => {
     if (!isCliente || !meusPedidos || meusPedidos.length === 0) return;
 
-    if (previousPedidosRef.current === null) {
-      previousPedidosRef.current = meusPedidos.map(p => ({ id: p.id, status: p.status }));
+    if (previousMeusPedidosRef.current === null) {
+      previousMeusPedidosRef.current = meusPedidos.map(p => ({ id: p.id, status: p.status }));
       return;
     }
 
-    const previousMap = new Map(previousPedidosRef.current.map(p => [p.id, p.status]));
+    const previousMap = new Map(previousMeusPedidosRef.current.map(p => [p.id, p.status]));
     
     meusPedidos.forEach(pedido => {
       const previousStatus = previousMap.get(pedido.id);
       
       if (previousStatus && previousStatus !== pedido.status) {
         const statusMessages = {
-          confirmado: { emoji: '✅', text: 'Pedido confirmado', color: 'blue' },
-          em_andamento: { emoji: '🚀', text: 'Pedido em andamento', color: 'purple' },
-          em_rota: { emoji: '🗺️', text: 'Motorista a caminho', color: 'purple' },
-          concluido: { emoji: '🎉', text: 'Pedido concluído', color: 'green' },
-          cancelado: { emoji: '❌', text: 'Pedido cancelado', color: 'red' }
+          confirmado: { emoji: '✅', text: 'Pedido confirmado', color: '#3b82f6' },
+          em_andamento: { emoji: '🚀', text: 'Pedido em andamento', color: '#8b5cf6' },
+          em_rota: { emoji: '🗺️', text: 'Motorista a caminho', color: '#8b5cf6' },
+          concluido: { emoji: '🎉', text: 'Pedido concluído', color: '#10b981' },
+          cancelado: { emoji: '❌', text: 'Pedido cancelado', color: '#ef4444' }
         };
 
         const statusInfo = statusMessages[pedido.status];
@@ -112,16 +158,29 @@ export function useNotifications() {
               }
             }
           );
+
+          // Criar notificação persistente
+          criarNotificacao({
+            usuario_email: user.email,
+            tipo: 'status_atualizado',
+            titulo: statusInfo.text,
+            descricao: `Seu pedido de ${pedido.tipo_servico} foi atualizado`,
+            pedido_id: pedido.id,
+            icone: statusInfo.emoji,
+            cor: statusInfo.color
+          });
         }
       }
     });
 
-    previousPedidosRef.current = meusPedidos.map(p => ({ id: p.id, status: p.status }));
-  }, [meusPedidos, isCliente]);
+    previousMeusPedidosRef.current = meusPedidos.map(p => ({ id: p.id, status: p.status }));
+  }, [meusPedidos, isCliente, user]);
 
   return {
     pedidosDisponiveis: isMotorista ? pedidosDisponiveis : [],
     meusPedidos: isCliente ? meusPedidos : [],
-    hasNewNotifications: isMotorista ? pedidosDisponiveis.length > 0 : false
+    notificacoesNaoLidas,
+    totalNaoLidas: notificacoesNaoLidas.length,
+    hasNewNotifications: notificacoesNaoLidas.length > 0
   };
 }
