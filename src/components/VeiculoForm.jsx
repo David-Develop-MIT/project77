@@ -76,6 +76,19 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
     });
   };
 
+  const formatarMoeda = (valor) => {
+    if (!valor) return '';
+    const numero = valor.toString().replace(/\D/g, '');
+    const valorNumerico = parseFloat(numero) / 100;
+    return valorNumerico.toFixed(2);
+  };
+
+  const handleValorKmChange = (e) => {
+    const valor = e.target.value.replace(/\D/g, '');
+    const valorFormatado = formatarMoeda(valor);
+    handleChange('valor_por_km', valorFormatado);
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -85,7 +98,7 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
     }
 
     if (!formData.modalidades || formData.modalidades.length === 0) {
-      toast.error('Selecione pelo menos uma modalidade');
+      toast.error('Selecione pelo menos uma modalidade de serviço');
       return;
     }
 
@@ -220,13 +233,12 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
                 />
               </div>
               <div>
-                <Label>Nome do Motorista *</Label>
+                <Label>Nome do Motorista</Label>
                 <Input
                   value={formData.nome_motorista}
                   onChange={(e) => handleChange('nome_motorista', e.target.value)}
                   placeholder="Nome completo"
                   className="rounded-xl"
-                  required
                 />
               </div>
             </div>
@@ -234,16 +246,17 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label>Valor por Km (R$) *</Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.valor_por_km}
-                  onChange={(e) => handleChange('valor_por_km', e.target.value)}
-                  placeholder="1.50"
-                  className="rounded-xl"
-                  required
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">R$</span>
+                  <Input
+                    type="text"
+                    value={formData.valor_por_km}
+                    onChange={handleValorKmChange}
+                    placeholder="0,00"
+                    className="rounded-xl pl-10"
+                    required
+                  />
+                </div>
               </div>
               <div className="flex items-center gap-2 pt-6">
                 <Checkbox
