@@ -51,13 +51,21 @@ function calcularScore(motorista, pedido, distancia) {
   const avaliacao = motorista.avaliacao_media_motorista || 0;
   score += avaliacao * 4;
   
-  // Bonificar por boost/prioridade (até +30 pontos)
-  score += (motorista.boost_nivel || 0) * 3;
+  // CRÍTICO: Bonificar por boost/prioridade (até +40 pontos)
+  // Boost é o fator mais importante para priorização
+  const boost = motorista.boost_nivel || 0;
+  score += boost * 4; // Multiplicador aumentado de 3 para 4
   
   // Bonificar se veículo é compatível (+10 pontos)
   if (verificarVeiculo(pedido, motorista)) {
     score += 10;
   }
+  
+  // Bonificar por histórico de entregas (+15 pontos para experientes)
+  const totalEntregas = motorista.total_entregas || 0;
+  if (totalEntregas >= 100) score += 15;
+  else if (totalEntregas >= 50) score += 10;
+  else if (totalEntregas >= 20) score += 5;
   
   // Penalizar se motorista está ocupado (-50 pontos)
   if (motorista.status === 'ocupado') {
@@ -132,12 +140,21 @@ Deno.serve(async (req) => {
     
     // Buscar dados de usuário de cada motorista (para avaliações e boost)
     const users = await base44.asServiceRole.entities.User.list();
+    const pedidosTodos = await base44.asServiceRole.entities.Pedido.list();
+    
     const motoristasComDados = motoristas.map(m => {
       const user = users.find(u => u.motorista_id === m.id);
+      const pedidosMotorista = pedidosTodos.filter(p => p.motorista_id === m.id);
+      const entregasConcluidas = pedidosMotorista.filter(p => p.status === 'concluido').length;
+      
       return {
         ...m,
         avaliacao_media_motorista: user?.avaliacao_media_motorista || 0,
         boost_nivel: user?.boost_nivel || 0,
+        boost_automatico: user?.boost_automatico || 0,
+        boost_manual: user?.boost_manual || 0,
+        total_entregas: pedidosMotorista.length,
+        entregas_concluidas: entregasConcluidas,
         disponibilidade_horario: user?.disponibilidade_horario
       };
     });
@@ -202,11 +219,12 @@ Deno.serve(async (req) => {
     // Criar notificação para o motorista
     const user = users.find(u => u.motorista_id === melhorCandidato.motorista.id);
     if (user) {
+      const boostInfo = user.boost_nivel > 0 ? ` (Boost: ${user.boost_nivel})` : '';
       await base44.asServiceRole.entities.Notificacao.create({
         usuario_email: user.email,
         tipo: 'novo_pedido',
         titulo: '🎯 Novo Pedido Disponível!',
-        descricao: `Pedido de ${pedido.tipo_servico} a ${melhorCandidato.distancia.toFixed(1)}km de você. Score: ${melhorCandidato.score.toFixed(0)}`,
+        descricao: `Pedido de ${pedido.tipo_servico} a ${melhorCandidato.distancia.toFixed(1)}km de você${boostInfo}. Valor: R$ ${pedido.valor_total?.toFixed(2) || '0.00'}`,
         pedido_id: pedido.id,
         icone: '🚗',
         cor: '#3b82f6'

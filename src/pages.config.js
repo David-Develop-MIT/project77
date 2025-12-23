@@ -16,6 +16,7 @@ import PerfilMotorista from './pages/PerfilMotorista';
 import Chat from './pages/Chat';
 import Carteira from './pages/Carteira';
 import AdminFaturas from './pages/AdminFaturas';
+import AdminBoost from './pages/AdminBoost';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "Chat": Chat,
     "Carteira": Carteira,
     "AdminFaturas": AdminFaturas,
+    "AdminBoost": AdminBoost,
 }
 
 export const pagesConfig = {
