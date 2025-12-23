@@ -55,9 +55,8 @@ export default function Layout({ children }) {
 
   const handleLogout = async () => {
     toast.success('Até logo!');
-    setTimeout(async () => {
-      await base44.auth.logout();
-      base44.auth.redirectToLogin();
+    setTimeout(() => {
+      navigate(createPageUrl('TokenLogin'));
     }, 500);
   };
 
