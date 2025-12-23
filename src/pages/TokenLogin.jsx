@@ -188,16 +188,16 @@ export default function TokenLogin() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="emailOuCelular" className="flex items-center gap-2 mb-2">
+                <Label htmlFor="email" className="flex items-center gap-2 mb-2">
                   <Mail className="w-4 h-4 text-slate-500" />
-                  Seu email ou celular
+                  Email
                 </Label>
                 <Input
-                  id="emailOuCelular"
-                  type="text"
-                  value={formData.emailOuCelular}
-                  onChange={(e) => setFormData(prev => ({ ...prev, emailOuCelular: e.target.value }))}
-                  placeholder="exemplo@email.com ou (00) 00000-0000"
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="exemplo@email.com"
                   className="rounded-xl"
                   required
                 />
