@@ -1,18 +1,38 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Route, Loader2, CheckCircle2, MapPin, Navigation, X } from 'lucide-react';
+import { Route, Loader2, CheckCircle2, MapPin, Navigation, X, Map } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { servicoConfig } from '@/components/servicoConfig';
+import MapaRota from '@/components/MapaRota';
 
 export default function OtimizadorRotas({ pedidos, onClose }) {
   const [selecionados, setSelecionados] = useState([]);
   const [rotaOtimizada, setRotaOtimizada] = useState(null);
+  const [localizacaoAtual, setLocalizacaoAtual] = useState(null);
+  const [mostrarMapa, setMostrarMapa] = useState(false);
   const queryClient = useQueryClient();
+
+  // Obter localização atual do motorista
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLocalizacaoAtual({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log('Não foi possível obter localização:', error);
+        }
+      );
+    }
+  }, []);
 
   const otimizarMutation = useMutation({
     mutationFn: async (pedidosIds) => {
@@ -131,7 +151,7 @@ Por favor, retorne a ordem otimizada dos pedidos, considerando o trânsito atual
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+        className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-100">
@@ -246,10 +266,36 @@ Por favor, retorne a ordem otimizada dos pedidos, considerando o trânsito atual
                     </div>
                   </div>
                   {rotaOtimizada.observacoes && (
-                    <p className="text-xs text-slate-600">{rotaOtimizada.observacoes}</p>
+                    <p className="text-xs text-slate-600 mb-3">{rotaOtimizada.observacoes}</p>
                   )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setMostrarMapa(!mostrarMapa)}
+                    className="w-full rounded-lg"
+                  >
+                    <Map className="w-4 h-4 mr-2" />
+                    {mostrarMapa ? 'Ocultar Mapa' : 'Ver Mapa Interativo'}
+                  </Button>
                 </CardContent>
               </Card>
+
+              {/* Mapa Interativo */}
+              <AnimatePresence>
+                {mostrarMapa && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    <MapaRota
+                      pedidosOrdenados={rotaOtimizada.ordem_otimizada.map(item => 
+                        pedidos.find(p => p.id === item.pedido_id)
+                      ).filter(Boolean)}
+                      localizacaoAtual={localizacaoAtual}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Ordem Otimizada */}
               <div className="space-y-3">
