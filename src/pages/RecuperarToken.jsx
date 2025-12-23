@@ -11,14 +11,14 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function RecuperarToken() {
-  const [emailOuCelular, setEmailOuCelular] = useState('');
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!emailOuCelular.trim()) {
-      toast.error('Por favor, preencha seu email ou celular');
+    if (!email.trim()) {
+      toast.error('Por favor, preencha seu email');
       return;
     }
 
@@ -26,7 +26,7 @@ export default function RecuperarToken() {
     
     try {
       const usuarios = await base44.entities.UsuarioPickup.list();
-      const usuario = usuarios.find(u => u.email_ou_celular === emailOuCelular);
+      const usuario = usuarios.find(u => u.email === email);
       
       if (!usuario) {
         toast.error('Usuário não encontrado');
@@ -34,26 +34,21 @@ export default function RecuperarToken() {
         return;
       }
 
-      const isEmail = emailOuCelular.includes('@');
-      if (isEmail) {
-        await base44.integrations.Core.SendEmail({
-          to: emailOuCelular,
-          subject: 'Recuperação de Token - Pickup Brasil',
-          body: `
-            <h2>Recuperação de Token</h2>
-            <p>Olá ${usuario.nome},</p>
-            <p>Você solicitou a recuperação do seu token de acesso.</p>
-            <p><strong>Seu token de acesso:</strong></p>
-            <h3 style="background: #f3f4f6; padding: 15px; border-radius: 8px; font-family: monospace;">${usuario.token_acesso}</h3>
-            <p>Use este token para acessar sua conta.</p>
-            <br>
-            <p>Equipe Pickup Brasil</p>
-          `
-        });
-        toast.success('Token enviado para seu email!');
-      } else {
-        toast.success('Seu token é: ' + usuario.token_acesso);
-      }
+      await base44.integrations.Core.SendEmail({
+        to: email,
+        subject: 'Recuperação de Token - Pickup Brasil',
+        body: `
+          <h2>Recuperação de Token</h2>
+          <p>Olá ${usuario.name},</p>
+          <p>Você solicitou a recuperação do seu token de acesso.</p>
+          <p><strong>Seu token de acesso:</strong></p>
+          <h3 style="background: #f3f4f6; padding: 15px; border-radius: 8px; font-family: monospace;">${usuario.token_acesso}</h3>
+          <p>Use este token para acessar sua conta.</p>
+          <br>
+          <p>Equipe Pickup Brasil</p>
+        `
+      });
+      toast.success('Token enviado para seu email!');
 
     } catch (error) {
       toast.error('Erro ao recuperar token');
@@ -93,16 +88,16 @@ export default function RecuperarToken() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label htmlFor="emailOuCelular" className="flex items-center gap-2 mb-2">
+                <Label htmlFor="email" className="flex items-center gap-2 mb-2">
                   <Mail className="w-4 h-4 text-slate-500" />
-                  Email ou celular
+                  Email
                 </Label>
                 <Input
-                  id="emailOuCelular"
-                  type="text"
-                  value={emailOuCelular}
-                  onChange={(e) => setEmailOuCelular(e.target.value)}
-                  placeholder="exemplo@email.com ou (00) 00000-0000"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="exemplo@email.com"
                   className="rounded-xl"
                   required
                 />

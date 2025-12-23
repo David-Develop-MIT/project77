@@ -14,7 +14,7 @@ export default function CadastroTokenLogin() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nome: '',
-    emailOuCelular: ''
+    email: ''
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -30,8 +30,13 @@ export default function CadastroTokenLogin() {
       return;
     }
 
-    if (!formData.emailOuCelular.trim()) {
-      toast.error('Por favor, preencha seu email ou celular');
+    if (!formData.email.trim()) {
+      toast.error('Por favor, preencha seu email');
+      return;
+    }
+
+    if (!formData.email.includes('@')) {
+      toast.error('Por favor, digite um email válido');
       return;
     }
 
@@ -40,10 +45,10 @@ export default function CadastroTokenLogin() {
     try {
       // Verificar se já existe
       const usuarios = await base44.entities.UsuarioPickup.list();
-      const usuarioExistente = usuarios.find(u => u.email_ou_celular === formData.emailOuCelular);
+      const usuarioExistente = usuarios.find(u => u.email === formData.email);
       
       if (usuarioExistente) {
-        toast.error('Este email/celular já está cadastrado');
+        toast.error('Este email já está cadastrado');
         setIsLoading(false);
         return;
       }
@@ -53,17 +58,15 @@ export default function CadastroTokenLogin() {
 
       // Criar usuário
       await base44.entities.UsuarioPickup.create({
-        nome: formData.nome,
-        email_ou_celular: formData.emailOuCelular,
+        name: formData.nome,
+        email: formData.email,
         token_acesso: token,
         ativo: true
       });
 
       // Enviar email com token
-      const isEmail = formData.emailOuCelular.includes('@');
-      if (isEmail) {
-        await base44.integrations.Core.SendEmail({
-          to: formData.emailOuCelular,
+      await base44.integrations.Core.SendEmail({
+        to: formData.email,
           subject: 'Seu Token de Acesso - Pickup Brasil',
           body: `
             <h2>Bem-vindo ao Pickup Brasil!</h2>
@@ -77,9 +80,8 @@ export default function CadastroTokenLogin() {
             <p>Equipe Pickup Brasil</p>
           `
         });
-      }
 
-      toast.success(isEmail ? 'Cadastro realizado! Verifique seu email.' : 'Cadastro realizado! Seu token: ' + token);
+      toast.success('Cadastro realizado! Verifique seu email.');
       
       setTimeout(() => {
         navigate(createPageUrl('TokenLogin'));
@@ -139,16 +141,16 @@ export default function CadastroTokenLogin() {
               </div>
 
               <div>
-                <Label htmlFor="emailOuCelular" className="flex items-center gap-2 mb-2">
+                <Label htmlFor="email" className="flex items-center gap-2 mb-2">
                   <Mail className="w-4 h-4 text-slate-500" />
-                  Email ou celular
+                  Email
                 </Label>
                 <Input
-                  id="emailOuCelular"
-                  type="text"
-                  value={formData.emailOuCelular}
-                  onChange={(e) => setFormData(prev => ({ ...prev, emailOuCelular: e.target.value }))}
-                  placeholder="exemplo@email.com ou (00) 00000-0000"
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="exemplo@email.com"
                   className="rounded-xl"
                   required
                 />

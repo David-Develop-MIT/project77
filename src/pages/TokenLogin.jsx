@@ -13,7 +13,7 @@ import { createPageUrl } from '@/utils';
 export default function TokenLogin() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    emailOuCelular: '',
+    email: '',
     tokenAcesso: ''
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +23,7 @@ export default function TokenLogin() {
     // Carregar dados salvos
     const savedEmail = localStorage.getItem('pickupLogin_email');
     if (savedEmail) {
-      setFormData(prev => ({ ...prev, emailOuCelular: savedEmail }));
+      setFormData(prev => ({ ...prev, email: savedEmail }));
     }
 
     // Verificar disponibilidade de biometria
@@ -63,7 +63,7 @@ export default function TokenLogin() {
       if (credential) {
         const savedToken = localStorage.getItem('pickupLogin_token');
         if (savedToken) {
-          setFormData({ emailOuCelular: savedEmail, tokenAcesso: savedToken });
+          setFormData({ email: savedEmail, tokenAcesso: savedToken });
           toast.success('Autenticado com biometria!');
           setTimeout(() => navigate(createPageUrl('Home')), 500);
         }
@@ -77,8 +77,8 @@ export default function TokenLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.emailOuCelular.trim()) {
-      toast.error('Por favor, preencha seu email ou celular');
+    if (!formData.email.trim()) {
+      toast.error('Por favor, preencha seu email');
       return;
     }
 
@@ -92,7 +92,7 @@ export default function TokenLogin() {
     try {
       const usuarios = await base44.entities.UsuarioPickup.list();
       const usuario = usuarios.find(
-        u => u.email_ou_celular === formData.emailOuCelular && u.token_acesso === formData.tokenAcesso
+        u => u.email === formData.email && u.token_acesso === formData.tokenAcesso
       );
 
       if (!usuario) {
@@ -113,7 +113,7 @@ export default function TokenLogin() {
       });
 
       // Salvar dados localmente
-      localStorage.setItem('pickupLogin_email', formData.emailOuCelular);
+      localStorage.setItem('pickupLogin_email', formData.email);
       localStorage.setItem('pickupLogin_token', formData.tokenAcesso);
 
       // Configurar biometria se disponível e primeira vez
@@ -131,8 +131,8 @@ export default function TokenLogin() {
               rp: { name: 'Pickup Brasil' },
               user: {
                 id: userId,
-                name: formData.emailOuCelular,
-                displayName: usuario.nome || formData.emailOuCelular
+                name: formData.email,
+                displayName: usuario.name || formData.email
               },
               pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
               timeout: 60000,
