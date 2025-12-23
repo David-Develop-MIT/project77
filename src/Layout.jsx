@@ -90,7 +90,7 @@ export default function Layout({ children }) {
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-slate-100">
         <div className="flex items-center justify-between px-4 h-16">
           <Link to={createPageUrl('Home')} className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+            <div className="bg-emerald-800 rounded-xl w-9 h-9 from-orange-500 to-orange-600 flex items-center justify-center">
               <Package className="w-5 h-5 text-white" />
             </div>
             <span className="font-bold text-slate-800">Pickup Brasil</span>
@@ -100,13 +100,13 @@ export default function Layout({ children }) {
               count={totalNaoLidas}
               hasNew={hasNewNotifications}
               onClick={() => setNotificationPanelOpen(true)} />
-            
+
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setMenuOpen(!menuOpen)}
               className="rounded-xl">
-              
+
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
@@ -119,14 +119,14 @@ export default function Layout({ children }) {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             className="bg-white border-b border-slate-100">
-            
+
               <nav className="p-4 space-y-2">
                 {navItems.map((item) =>
               <Link
                 key={item.page}
                 to={createPageUrl(item.page)}
                 onClick={() => setMenuOpen(false)}>
-                
+
                     <Button
                   variant={isActive(item.page) ? "default" : "ghost"}
                   className={`w-full justify-start rounded-xl ${
@@ -134,7 +134,7 @@ export default function Layout({ children }) {
                   'bg-orange-500 hover:bg-orange-600 text-white' :
                   'text-slate-600'}`
                   }>
-                  
+
                       <item.icon className="w-5 h-5 mr-3" />
                       {item.name}
                     </Button>
@@ -162,7 +162,7 @@ export default function Layout({ children }) {
                       nota={user.avaliacao_media_motorista}
                       totalAvaliacoes={user.total_avaliacoes_motorista || 0}
                       size="sm" />
-                    
+
                         </div>
                   }
                       {modoAtivo === 'cliente' && user.avaliacao_media_cliente &&
@@ -171,7 +171,7 @@ export default function Layout({ children }) {
                       nota={user.avaliacao_media_cliente}
                       totalAvaliacoes={user.total_avaliacoes_cliente || 0}
                       size="sm" />
-                    
+
                         </div>
                   }
                     </div>
@@ -185,7 +185,7 @@ export default function Layout({ children }) {
                   }}
                   className="w-full justify-start rounded-xl mb-2"
                   disabled={alternarModoMutation.isPending}>
-                  
+
                       <RefreshCw className="w-5 h-5 mr-3" />
                       Modo {modoAtivo === 'cliente' ? 'Motorista' : 'Cliente'}
                     </Button>
@@ -197,7 +197,7 @@ export default function Layout({ children }) {
                     handleLogout();
                   }}
                   className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl">
-                  
+
                     <LogOut className="w-5 h-5 mr-3" />
                     Sair da Conta
                   </Button>
@@ -212,7 +212,7 @@ export default function Layout({ children }) {
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-100 flex-col p-4 z-50">
         <div className="flex items-center justify-between mb-8 px-2">
           <Link to={createPageUrl('Home')} className="flex items-center gap-3">
-            <div className="bg-emerald-800 rounded-xl w-10 h-10 from-orange-500 to-orange-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
               <Package className="w-6 h-6 text-white" />
             </div>
             <span className="font-bold text-xl text-slate-800">Entregas</span>
@@ -221,7 +221,7 @@ export default function Layout({ children }) {
             count={totalNaoLidas}
             hasNew={hasNewNotifications}
             onClick={() => setNotificationPanelOpen(true)} />
-          
+
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -234,7 +234,7 @@ export default function Layout({ children }) {
               'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25' :
               'text-slate-600 hover:bg-slate-100'}`
               }>
-              
+
                 <item.icon className="w-5 h-5 mr-3" />
                 {item.name}
               </Button>
@@ -263,7 +263,7 @@ export default function Layout({ children }) {
                 nota={user.avaliacao_media_motorista}
                 totalAvaliacoes={user.total_avaliacoes_motorista || 0}
                 size="sm" />
-              
+
                 </div>
             }
               {modoAtivo === 'cliente' && user.avaliacao_media_cliente &&
@@ -272,7 +272,7 @@ export default function Layout({ children }) {
                 nota={user.avaliacao_media_cliente}
                 totalAvaliacoes={user.total_avaliacoes_cliente || 0}
                 size="sm" />
-              
+
                 </div>
             }
             </div>
@@ -283,7 +283,7 @@ export default function Layout({ children }) {
             onClick={() => alternarModoMutation.mutate(modoAtivo === 'cliente' ? 'motorista' : 'cliente')}
             className="w-full justify-start rounded-xl"
             disabled={alternarModoMutation.isPending}>
-            
+
               <RefreshCw className="w-4 h-4 mr-3" />
               Alternar para {modoAtivo === 'cliente' ? 'Motorista' : 'Cliente'}
             </Button>
@@ -292,7 +292,7 @@ export default function Layout({ children }) {
             variant="ghost"
             onClick={handleLogout}
             className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl">
-            
+
             <LogOut className="w-4 h-4 mr-3" />
             Sair da Conta
           </Button>
@@ -312,8 +312,8 @@ export default function Layout({ children }) {
               className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${
               isActive(item.page) ? 'text-orange-500' : 'text-slate-400'}`
               }>
-              
-                <item.icon className="w-5 h-5" />
+
+                <item.icon className="bg-emerald-700 lucide lucide-house w-5 h-5" />
                 <span className="text-xs font-medium">{item.name}</span>
               </motion.div>
             </Link>
@@ -330,7 +330,7 @@ export default function Layout({ children }) {
       <NotificationPanel
         isOpen={notificationPanelOpen}
         onClose={() => setNotificationPanelOpen(false)} />
-      
+
 
       {/* Notificação de Alocação Automática (apenas para motoristas) */}
       {modoAtivo === 'motorista' && <NotificacaoAlocacao />}
