@@ -41,9 +41,19 @@ export default function DetalhePedido() {
   const urlParams = new URLSearchParams(window.location.search);
   const pedidoId = urlParams.get('id');
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
+  const { data: authUser } = useQuery({
+    queryKey: ['authUser'],
     queryFn: () => base44.auth.me()
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser', authUser?.email],
+    queryFn: async () => {
+      if (!authUser?.email) return null;
+      const usuarios = await base44.entities.UsuarioPickup.list();
+      return usuarios.find(u => u.email === authUser.email);
+    },
+    enabled: !!authUser?.email
   });
 
   const { data: pedido, isLoading } = useQuery({
@@ -106,29 +116,40 @@ export default function DetalhePedido() {
   const atualizarMediasAvaliacao = async () => {
     try {
       const avaliacoes = await base44.entities.Avaliacao.list();
+      const usuarios = await base44.entities.UsuarioPickup.list();
       
       // Atualizar média do cliente
-      const avaliacoesCliente = avaliacoes.filter(a => a.avaliado_email === pedido.created_by);
-      if (avaliacoesCliente.length > 0) {
-        const mediaCliente = avaliacoesCliente.reduce((acc, a) => acc + a.nota, 0) / avaliacoesCliente.length;
-        await base44.entities.User.update(pedido.created_by, {
-          avaliacao_media_cliente: mediaCliente,
-          total_avaliacoes_cliente: avaliacoesCliente.length
-        });
+      const clienteUsuario = usuarios.find(u => u.email === pedido.created_by);
+      if (clienteUsuario) {
+        const avaliacoesCliente = avaliacoes.filter(a => 
+          a.avaliado_email === pedido.created_by && a.tipo_avaliador === 'motorista'
+        );
+        if (avaliacoesCliente.length > 0) {
+          const mediaCliente = avaliacoesCliente.reduce((acc, a) => acc + a.nota, 0) / avaliacoesCliente.length;
+          await base44.entities.UsuarioPickup.update(clienteUsuario.id, {
+            avaliacao_media_cliente: mediaCliente,
+            total_avaliacoes_cliente: avaliacoesCliente.length
+          });
+        }
       }
       
       // Atualizar média do motorista se houver
       if (pedido.motorista_id) {
-        const motoristas = await base44.entities.Motorista.list();
-        const motorista = motoristas.find(m => m.id === pedido.motorista_id);
-        if (motorista) {
-          const avaliacoesMotorista = avaliacoes.filter(a => a.avaliado_email === motorista.created_by);
-          if (avaliacoesMotorista.length > 0) {
-            const mediaMotorista = avaliacoesMotorista.reduce((acc, a) => acc + a.nota, 0) / avaliacoesMotorista.length;
-            await base44.entities.User.update(motorista.created_by, {
-              avaliacao_media_motorista: mediaMotorista,
-              total_avaliacoes_motorista: avaliacoesMotorista.length
-            });
+        const veiculos = await base44.entities.Veiculo.list();
+        const veiculo = veiculos.find(v => v.id === pedido.veiculo_ativo_id);
+        if (veiculo) {
+          const motoristaUsuario = usuarios.find(u => u.motorista_id === pedido.motorista_id);
+          if (motoristaUsuario) {
+            const avaliacoesMotorista = avaliacoes.filter(a => 
+              a.avaliado_email === motoristaUsuario.email && a.tipo_avaliador === 'cliente'
+            );
+            if (avaliacoesMotorista.length > 0) {
+              const mediaMotorista = avaliacoesMotorista.reduce((acc, a) => acc + a.nota, 0) / avaliacoesMotorista.length;
+              await base44.entities.UsuarioPickup.update(motoristaUsuario.id, {
+                avaliacao_media_motorista: mediaMotorista,
+                total_avaliacoes_motorista: avaliacoesMotorista.length
+              });
+            }
           }
         }
       }
@@ -138,7 +159,7 @@ export default function DetalhePedido() {
   };
 
   const isCliente = user?.email === pedido?.created_by;
-  const isMotorista = user?.motorista_id === pedido?.motorista_id;
+  const isMotorista = user?.motorista_id === pedido?.motorista_id || user?.tipos_conta?.includes('motorista');
   const podeAvaliar = pedido?.status === 'concluido' && !minhaAvaliacao;
 
   const abrirChatMutation = useMutation({
@@ -186,19 +207,26 @@ export default function DetalhePedido() {
     }
   });
   
-  let avaliadoEmail = null;
-  let avaliadoNome = null;
-  let tipoAvaliador = null;
-  
-  if (isCliente && pedido?.motorista_nome) {
-    avaliadoNome = pedido.motorista_nome;
-    tipoAvaliador = 'cliente';
-    // Buscar email do motorista
-  } else if (isMotorista) {
-    avaliadoEmail = pedido?.created_by;
-    avaliadoNome = pedido?.nome_cliente;
-    tipoAvaliador = 'motorista';
-  }
+  const getAvaliadoInfo = async () => {
+    if (isCliente && pedido?.motorista_id) {
+      // Cliente avaliando motorista
+      const usuarios = await base44.entities.UsuarioPickup.list();
+      const motoristaUsuario = usuarios.find(u => u.motorista_id === pedido.motorista_id);
+      return {
+        avaliadoEmail: motoristaUsuario?.email,
+        avaliadoNome: pedido.motorista_nome,
+        tipoAvaliador: 'cliente'
+      };
+    } else if (isMotorista && pedido?.created_by) {
+      // Motorista avaliando cliente
+      return {
+        avaliadoEmail: pedido.created_by,
+        avaliadoNome: pedido.nome_cliente,
+        tipoAvaliador: 'motorista'
+      };
+    }
+    return { avaliadoEmail: null, avaliadoNome: null, tipoAvaliador: null };
+  };
 
   if (isLoading) {
     return (
@@ -672,9 +700,9 @@ export default function DetalhePedido() {
             <AvaliacaoModal
               pedido={pedido}
               onClose={() => setShowAvaliacaoModal(false)}
-              tipoAvaliador={tipoAvaliador}
-              avaliadoEmail={avaliadoEmail || pedido.created_by}
-              avaliadoNome={avaliadoNome}
+              isCliente={isCliente}
+              isMotorista={isMotorista}
+              getAvaliadoInfo={getAvaliadoInfo}
             />
           )}
         </AnimatePresence>
