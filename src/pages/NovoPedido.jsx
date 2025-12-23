@@ -84,6 +84,21 @@ export default function NovoPedido() {
     mutationFn: async (data) => {
       const pedido = await base44.entities.Pedido.create(data);
       
+      // Se for cartão de crédito/débito, redirecionar para checkout do Stripe
+      if (data.metodo_pagamento === 'cartao_credito' || data.metodo_pagamento === 'cartao_debito') {
+        const { data: checkoutData } = await base44.functions.invoke('criarCheckoutStripe', {
+          pedido_id: pedido.id,
+          valor: data.valor_total,
+          metodo_pagamento: data.metodo_pagamento
+        });
+        
+        if (checkoutData.checkout_url) {
+          window.location.href = checkoutData.checkout_url;
+          return pedido;
+        }
+      }
+      
+      // Para outros métodos (PIX, dinheiro), continuar normalmente
       // Tentar alocar automaticamente
       try {
         await base44.functions.invoke('alocarPedido', { pedido_id: pedido.id });
@@ -93,7 +108,11 @@ export default function NovoPedido() {
       
       return pedido;
     },
-    onSuccess: () => {
+    onSuccess: (pedido) => {
+      if (formData.metodo_pagamento === 'cartao_credito' || formData.metodo_pagamento === 'cartao_debito') {
+        // Não mostrar toast, pois será redirecionado
+        return;
+      }
       toast.success('Pedido criado! Buscando motorista disponível...');
       navigate(createPageUrl('MeusPedidos'));
     },

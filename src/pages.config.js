@@ -20,6 +20,8 @@ import PerfilCliente from './pages/PerfilCliente';
 import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
+import PagamentoSucesso from './pages/PagamentoSucesso';
+import PagamentoCancelado from './pages/PagamentoCancelado';
 import __Layout from './Layout.jsx';
 
 
@@ -46,6 +48,8 @@ export const PAGES = {
     "PerfilMotorista": PerfilMotorista,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
+    "PagamentoSucesso": PagamentoSucesso,
+    "PagamentoCancelado": PagamentoCancelado,
 }
 
 export const pagesConfig = {
