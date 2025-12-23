@@ -29,6 +29,7 @@ import {
 import StatusBadge from '@/components/StatusBadge';
 import AvaliacaoModal from '@/components/AvaliacaoModal';
 import AvaliacaoDisplay from '@/components/AvaliacaoDisplay';
+import OfertasPedido from '@/components/OfertasPedido';
 import { servicoConfig } from '@/components/servicoConfig';
 import { toast } from 'sonner';
 

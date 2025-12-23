@@ -18,6 +18,7 @@ import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
 import CompletarPerfil from './pages/CompletarPerfil';
+import FazerOferta from './pages/FazerOferta';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +43,7 @@ export const PAGES = {
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
     "CompletarPerfil": CompletarPerfil,
+    "FazerOferta": FazerOferta,
 }
 
 export const pagesConfig = {
