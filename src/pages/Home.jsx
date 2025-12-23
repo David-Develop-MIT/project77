@@ -18,9 +18,9 @@ export default function Home() {
 
   const stats = {
     total: pedidos.length,
-    pendentes: pedidos.filter(p => p.status === 'pendente').length,
-    emAndamento: pedidos.filter(p => p.status === 'em_andamento' || p.status === 'confirmado').length,
-    concluidos: pedidos.filter(p => p.status === 'concluido').length
+    pendentes: pedidos.filter((p) => p.status === 'pendente').length,
+    emAndamento: pedidos.filter((p) => p.status === 'em_andamento' || p.status === 'confirmado').length,
+    concluidos: pedidos.filter((p) => p.status === 'concluido').length
   };
 
   const pedidosRecentes = pedidos.slice(0, 5);
@@ -29,11 +29,11 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50">
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
-        >
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+
           <div>
             <h1 className="text-3xl font-bold text-slate-800">
               Painel de Entregas
@@ -43,7 +43,7 @@ export default function Home() {
             </p>
           </div>
           <Link to={createPageUrl('NovoPedido')}>
-            <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg shadow-orange-500/25 rounded-xl px-6">
+            <Button className="bg-emerald-700 text-white px-6 py-2 text-sm font-medium rounded-xl inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-primary/90 h-9 from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/25">
               <Plus className="w-5 h-5 mr-2" />
               Novo Pedido
             </Button>
@@ -52,34 +52,34 @@ export default function Home() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatsCard 
-            icon={Package} 
-            label="Total de Pedidos" 
+          <StatsCard
+            icon={Package}
+            label="Total de Pedidos"
             value={stats.total}
             color="#3b82f6"
-            delay={0}
-          />
-          <StatsCard 
-            icon={Clock} 
-            label="Pendentes" 
+            delay={0} />
+
+          <StatsCard
+            icon={Clock}
+            label="Pendentes"
             value={stats.pendentes}
             color="#f59e0b"
-            delay={0.1}
-          />
-          <StatsCard 
-            icon={TrendingUp} 
-            label="Em Andamento" 
+            delay={0.1} />
+
+          <StatsCard
+            icon={TrendingUp}
+            label="Em Andamento"
             value={stats.emAndamento}
             color="#8b5cf6"
-            delay={0.2}
-          />
-          <StatsCard 
-            icon={CheckCircle} 
-            label="Concluídos" 
+            delay={0.2} />
+
+          <StatsCard
+            icon={CheckCircle}
+            label="Concluídos"
             value={stats.concluidos}
             color="#10b981"
-            delay={0.3}
-          />
+            delay={0.3} />
+
         </div>
 
         {/* Quick Actions */}
@@ -87,32 +87,32 @@ export default function Home() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mb-8"
-        >
+          className="mb-8">
+
           <h2 className="text-lg font-semibold text-slate-800 mb-4">Serviços Disponíveis</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {Object.entries(servicoConfig).map(([key, config]) => {
               const Icon = config.icon;
               return (
-                <Link 
-                  key={key} 
-                  to={`${createPageUrl('NovoPedido')}?tipo=${key}`}
-                >
+                <Link
+                  key={key}
+                  to={`${createPageUrl('NovoPedido')}?tipo=${key}`}>
+
                   <motion.div
                     whileHover={{ scale: 1.03, y: -2 }}
                     whileTap={{ scale: 0.98 }}
-                    className="bg-white rounded-xl p-4 border border-slate-100 hover:shadow-lg transition-all duration-300 cursor-pointer text-center"
-                  >
-                    <div 
+                    className="bg-white rounded-xl p-4 border border-slate-100 hover:shadow-lg transition-all duration-300 cursor-pointer text-center">
+
+                    <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
-                      style={{ backgroundColor: `${config.color}15` }}
-                    >
+                      style={{ backgroundColor: `${config.color}15` }}>
+
                       <Icon className="w-6 h-6" style={{ color: config.color }} />
                     </div>
                     <p className="font-medium text-slate-700 text-sm">{config.title}</p>
                   </motion.div>
-                </Link>
-              );
+                </Link>);
+
             })}
           </div>
         </motion.div>
@@ -121,8 +121,8 @@ export default function Home() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
+          transition={{ delay: 0.3 }}>
+
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-slate-800">Pedidos Recentes</h2>
             <Link to={createPageUrl('MeusPedidos')}>
@@ -132,10 +132,10 @@ export default function Home() {
             </Link>
           </div>
           
-          {isLoading ? (
-            <div className="grid gap-4 md:grid-cols-2">
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white rounded-2xl p-5 border border-slate-100 animate-pulse">
+          {isLoading ?
+          <div className="grid gap-4 md:grid-cols-2">
+              {[1, 2, 3, 4].map((i) =>
+            <div key={i} className="bg-white rounded-2xl p-5 border border-slate-100 animate-pulse">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-11 h-11 rounded-xl bg-slate-100" />
                     <div className="flex-1">
@@ -148,10 +148,10 @@ export default function Home() {
                     <div className="h-3 bg-slate-100 rounded w-3/4" />
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : pedidosRecentes.length === 0 ? (
-            <div className="bg-white rounded-2xl p-12 border border-slate-100 text-center">
+            )}
+            </div> :
+          pedidosRecentes.length === 0 ?
+          <div className="bg-white rounded-2xl p-12 border border-slate-100 text-center">
               <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
                 <Package className="w-8 h-8 text-slate-400" />
               </div>
@@ -163,18 +163,18 @@ export default function Home() {
                   Criar Pedido
                 </Button>
               </Link>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {pedidosRecentes.map(pedido => (
-                <Link key={pedido.id} to={`${createPageUrl('DetalhePedido')}?id=${pedido.id}`}>
+            </div> :
+
+          <div className="grid gap-4 md:grid-cols-2">
+              {pedidosRecentes.map((pedido) =>
+            <Link key={pedido.id} to={`${createPageUrl('DetalhePedido')}?id=${pedido.id}`}>
                   <PedidoCard pedido={pedido} />
                 </Link>
-              ))}
+            )}
             </div>
-          )}
+          }
         </motion.div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
