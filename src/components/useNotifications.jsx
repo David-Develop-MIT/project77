@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import NotificationSound from '@/components/NotificationSound';
 
 const criarNotificacao = async (data) => {
   try {
@@ -12,12 +13,24 @@ const criarNotificacao = async (data) => {
 };
 
 export function useNotifications() {
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
+  const { data: authUser } = useQuery({
+    queryKey: ['authUser'],
     queryFn: () => base44.auth.me(),
     retry: false
   });
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser', authUser?.email],
+    queryFn: async () => {
+      if (!authUser?.email) return null;
+      const usuarios = await base44.entities.UsuarioPickup.list();
+      return usuarios.find(u => u.email === authUser.email);
+    },
+    enabled: !!authUser?.email,
+    retry: false
+  });
+
+  const [playSound, setPlaySound] = useState(false);
   const previousPedidosRef = useRef(null);
   const previousMeusPedidosRef = useRef(null);
   const notifiedPedidosRef = useRef(new Set());
@@ -26,18 +39,24 @@ export function useNotifications() {
   const isMotorista = modoAtivo === 'motorista';
   const isCliente = modoAtivo === 'cliente';
 
-  // Buscar notificações não lidas
+  const triggerSound = () => {
+    setPlaySound(true);
+    setTimeout(() => setPlaySound(false), 100);
+  };
+
+  // Buscar notificações não lidas - TEMPO REAL
   const { data: notificacoesNaoLidas = [] } = useQuery({
     queryKey: ['notificacoes-nao-lidas', user?.email],
     queryFn: async () => {
-      const todas = await base44.entities.Notificacao.list('-created_date', 50);
+      const todas = await base44.entities.Notificacao.list('-created_date', 100);
       return todas.filter(n => n.usuario_email === user?.email && !n.lida);
     },
     enabled: !!user?.email,
-    refetchInterval: 30000
+    refetchInterval: 3000, // Poll a cada 3 segundos
+    refetchOnWindowFocus: true
   });
 
-  // Monitorar novas mensagens de chat
+  // Monitorar novas mensagens de chat - TEMPO REAL
   const { data: mensagensNaoLidas = [] } = useQuery({
     queryKey: ['mensagens-chat-nao-lidas', user?.email],
     queryFn: async () => {
@@ -48,7 +67,8 @@ export function useNotifications() {
       );
     },
     enabled: !!user?.email,
-    refetchInterval: 10000
+    refetchInterval: 3000, // Poll a cada 3 segundos
+    refetchOnWindowFocus: true
   });
 
   // Notificar sobre novas mensagens
@@ -65,6 +85,7 @@ export function useNotifications() {
     const novasMensagens = mensagensNaoLidas.filter(m => !previousIds.has(m.id));
 
     if (novasMensagens.length > 0) {
+      triggerSound();
       novasMensagens.forEach(mensagem => {
         toast.success(
           `💬 Nova mensagem de ${mensagem.remetente_nome}`,
@@ -72,35 +93,25 @@ export function useNotifications() {
             description: mensagem.tipo === 'texto' 
               ? mensagem.conteudo.substring(0, 50) 
               : mensagem.tipo === 'imagem' ? '📷 Imagem' : '📍 Localização',
-            duration: 6000,
-            action: {
-              label: 'Ver',
-              onClick: () => window.location.href = '/Chat'
-            }
+            duration: 6000
           }
         );
+
+        criarNotificacao({
+          usuario_email: user.email,
+          tipo: 'mensagem_sistema',
+          titulo: `Mensagem de ${mensagem.remetente_nome}`,
+          descricao: mensagem.tipo === 'texto' ? mensagem.conteudo.substring(0, 100) : 'Nova mensagem',
+          icone: '💬',
+          cor: '#3b82f6'
+        });
       });
     }
 
     previousMensagensRef.current = mensagensNaoLidas.map(m => m.id);
   }, [mensagensNaoLidas, user?.email]);
 
-  // Monitorar pedidos em andamento para motoristas
-  const { data: meusPedidosMotorista = [] } = useQuery({
-    queryKey: ['meus-pedidos-motorista-notif'],
-    queryFn: async () => {
-      const todos = await base44.entities.Pedido.list('-created_date', 50);
-      return todos.filter(p => 
-        p.motorista_id === user?.motorista_id && 
-        (p.status === 'em_andamento' || p.status === 'em_rota')
-      );
-    },
-    enabled: isMotorista && !!user?.motorista_id,
-    refetchInterval: 20000,
-    refetchOnWindowFocus: true
-  });
-
-  // Monitorar pedidos para motoristas (novos pedidos disponíveis)
+  // Monitorar pedidos disponíveis para motoristas - TEMPO REAL
   const { data: pedidosDisponiveis = [] } = useQuery({
     queryKey: ['pedidos-disponiveis-notif'],
     queryFn: async () => {
@@ -108,11 +119,11 @@ export function useNotifications() {
       return todos.filter(p => p.status === 'pendente' || p.status === 'confirmado');
     },
     enabled: isMotorista && !!user,
-    refetchInterval: 15000, // Poll a cada 15 segundos
+    refetchInterval: 5000, // Poll a cada 5 segundos
     refetchOnWindowFocus: true
   });
 
-  // Monitorar pedidos do cliente (atualizações de status)
+  // Monitorar pedidos do cliente - TEMPO REAL
   const { data: meusPedidos = [] } = useQuery({
     queryKey: ['meus-pedidos-notif'],
     queryFn: async () => {
@@ -120,7 +131,7 @@ export function useNotifications() {
       return todos.filter(p => p.created_by === user.email);
     },
     enabled: isCliente && !!user,
-    refetchInterval: 20000, // Poll a cada 20 segundos
+    refetchInterval: 5000, // Poll a cada 5 segundos
     refetchOnWindowFocus: true
   });
 
@@ -139,6 +150,7 @@ export function useNotifications() {
     );
 
     if (novosPedidos.length > 0) {
+      triggerSound();
       novosPedidos.forEach(pedido => {
         notifiedPedidosRef.current.add(pedido.id);
         
@@ -146,15 +158,10 @@ export function useNotifications() {
           `🚗 Novo pedido disponível: ${pedido.tipo_servico}`,
           {
             description: `Cliente: ${pedido.nome_cliente} - ${pedido.endereco_origem}`,
-            duration: 8000,
-            action: {
-              label: 'Ver',
-              onClick: () => window.location.href = '/PedidosDisponiveis'
-            }
+            duration: 8000
           }
         );
 
-        // Criar notificação persistente
         criarNotificacao({
           usuario_email: user.email,
           tipo: 'novo_pedido',
@@ -168,7 +175,7 @@ export function useNotifications() {
     }
 
     previousPedidosRef.current = pedidosDisponiveis.map(p => p.id);
-  }, [pedidosDisponiveis, isMotorista]);
+  }, [pedidosDisponiveis, isMotorista, user]);
 
   // Notificações para clientes - mudanças de status
   useEffect(() => {
@@ -185,6 +192,8 @@ export function useNotifications() {
       const previousStatus = previousMap.get(pedido.id);
       
       if (previousStatus && previousStatus !== pedido.status) {
+        triggerSound();
+        
         const statusMessages = {
           confirmado: { emoji: '✅', text: 'Pedido confirmado', color: '#3b82f6' },
           em_andamento: { emoji: '🚀', text: 'Pedido em andamento', color: '#8b5cf6' },
@@ -199,15 +208,10 @@ export function useNotifications() {
             `${statusInfo.emoji} ${statusInfo.text}`,
             {
               description: `Pedido: ${pedido.tipo_servico} - ${pedido.nome_cliente}`,
-              duration: 6000,
-              action: {
-                label: 'Ver Detalhes',
-                onClick: () => window.location.href = `/DetalhePedido?id=${pedido.id}`
-              }
+              duration: 6000
             }
           );
 
-          // Criar notificação persistente
           criarNotificacao({
             usuario_email: user.email,
             tipo: 'status_atualizado',
@@ -224,11 +228,104 @@ export function useNotifications() {
     previousMeusPedidosRef.current = meusPedidos.map(p => ({ id: p.id, status: p.status }));
   }, [meusPedidos, isCliente, user]);
 
+  // Monitorar novas ofertas recebidas - TEMPO REAL
+  const { data: ofertas = [] } = useQuery({
+    queryKey: ['ofertas-recebidas', user?.email],
+    queryFn: async () => {
+      if (!user?.email || !isCliente) return [];
+      const pedidos = await base44.entities.Pedido.list();
+      const meusPedidos = pedidos.filter(p => p.created_by === user.email);
+      const todasOfertas = await base44.entities.Oferta.list('-created_date', 100);
+      return todasOfertas.filter(o => 
+        meusPedidos.some(p => p.id === o.pedido_id) && 
+        o.status === 'pendente'
+      );
+    },
+    enabled: !!user?.email && isCliente,
+    refetchInterval: 5000
+  });
+
+  const ofertasAnteriorRef = useRef([]);
+  useEffect(() => {
+    if (!ofertas || ofertas.length === 0) return;
+
+    const novasOfertas = ofertas.filter(o => 
+      !ofertasAnteriorRef.current.some(prevO => prevO.id === o.id)
+    );
+
+    if (novasOfertas.length > 0 && ofertasAnteriorRef.current.length > 0) {
+      triggerSound();
+      novasOfertas.forEach(oferta => {
+        toast.success(`💰 Nova oferta de ${oferta.motorista_nome}!`, {
+          description: `Valor: R$ ${oferta.valor_proposto.toFixed(2)}`,
+          duration: 5000
+        });
+
+        criarNotificacao({
+          usuario_email: user.email,
+          tipo: 'novo_pedido',
+          titulo: 'Nova Oferta Recebida',
+          descricao: `${oferta.motorista_nome} fez uma oferta de R$ ${oferta.valor_proposto.toFixed(2)} para seu pedido`,
+          pedido_id: oferta.pedido_id,
+          icone: '💰',
+          cor: '#f59e0b'
+        });
+      });
+    }
+
+    ofertasAnteriorRef.current = ofertas;
+  }, [ofertas, user]);
+
+  // Monitorar avaliações recebidas - TEMPO REAL
+  const { data: avaliacoes = [] } = useQuery({
+    queryKey: ['avaliacoes-recebidas', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      const todas = await base44.entities.Avaliacao.list('-created_date', 50);
+      return todas.filter(a => a.avaliado_email === user.email);
+    },
+    enabled: !!user?.email,
+    refetchInterval: 10000
+  });
+
+  const avaliacoesAnteriorRef = useRef([]);
+  useEffect(() => {
+    if (!avaliacoes || avaliacoes.length === 0) return;
+
+    const novasAvaliacoes = avaliacoes.filter(a => 
+      !avaliacoesAnteriorRef.current.some(prevA => prevA.id === a.id)
+    );
+
+    if (novasAvaliacoes.length > 0 && avaliacoesAnteriorRef.current.length > 0) {
+      triggerSound();
+      novasAvaliacoes.forEach(avaliacao => {
+        const estrelas = '⭐'.repeat(avaliacao.nota);
+        toast.success('⭐ Nova Avaliação Recebida!', {
+          description: `${estrelas} ${avaliacao.nota}/5`,
+          duration: 5000
+        });
+
+        criarNotificacao({
+          usuario_email: user.email,
+          tipo: 'avaliacao_recebida',
+          titulo: 'Nova Avaliação',
+          descricao: `Você recebeu ${avaliacao.nota} estrelas${avaliacao.comentario ? `: "${avaliacao.comentario}"` : ''}`,
+          pedido_id: avaliacao.pedido_id,
+          icone: '⭐',
+          cor: '#eab308'
+        });
+      });
+    }
+
+    avaliacoesAnteriorRef.current = avaliacoes;
+  }, [avaliacoes, user]);
+
   return {
     pedidosDisponiveis: isMotorista ? pedidosDisponiveis : [],
     meusPedidos: isCliente ? meusPedidos : [],
     notificacoesNaoLidas,
     totalNaoLidas: notificacoesNaoLidas.length,
-    hasNewNotifications: notificacoesNaoLidas.length > 0
+    hasNewNotifications: notificacoesNaoLidas.length > 0,
+    NotificationSound: () => <NotificationSound play={playSound} />
   };
 }
