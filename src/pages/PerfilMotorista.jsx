@@ -6,7 +6,7 @@ import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, User, Star, TrendingUp, Package, DollarSign, 
-  Settings, Clock, MapPin, Save, Award, Calendar
+  Settings, Clock, MapPin, Save, Award, Calendar, Edit2, X, Phone, Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,6 +66,29 @@ export default function PerfilMotorista() {
       domingo: { ativo: false, inicio: '08:00', fim: '13:00' }
     }
   );
+
+  const [editandoPerfil, setEditandoPerfil] = useState(false);
+  const [formDataPerfil, setFormDataPerfil] = useState({
+    full_name: '',
+    telefone: '',
+    cep: '',
+    endereco: '',
+    numero: '',
+    complemento: ''
+  });
+
+  React.useEffect(() => {
+    if (user) {
+      setFormDataPerfil({
+        full_name: user.full_name || '',
+        telefone: user.telefone || '',
+        cep: user.cep || '',
+        endereco: user.endereco || '',
+        numero: user.numero || '',
+        complemento: user.complemento || ''
+      });
+    }
+  }, [user]);
 
   const salvarMutation = useMutation({
     mutationFn: (data) => base44.auth.updateMe(data),
@@ -205,8 +228,12 @@ export default function PerfilMotorista() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="estatisticas" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 rounded-xl">
+        <Tabs defaultValue="perfil" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 rounded-xl">
+            <TabsTrigger value="perfil" className="rounded-lg">
+              <User className="w-4 h-4 mr-2" />
+              Perfil
+            </TabsTrigger>
             <TabsTrigger value="estatisticas" className="rounded-lg">
               <TrendingUp className="w-4 h-4 mr-2" />
               Estatísticas
@@ -224,6 +251,165 @@ export default function PerfilMotorista() {
               Configurações
             </TabsTrigger>
           </TabsList>
+
+          {/* Perfil */}
+          <TabsContent value="perfil">
+            <Card className="border-slate-100 rounded-2xl">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Informações Pessoais</CardTitle>
+                {!editandoPerfil ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditandoPerfil(true)}
+                    className="rounded-xl"
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Editar
+                  </Button>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditandoPerfil(false);
+                        setFormDataPerfil({
+                          full_name: user.full_name || '',
+                          telefone: user.telefone || '',
+                          cep: user.cep || '',
+                          endereco: user.endereco || '',
+                          numero: user.numero || '',
+                          complemento: user.complemento || ''
+                        });
+                      }}
+                      className="rounded-xl"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancelar
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        salvarMutation.mutate(formDataPerfil);
+                        setEditandoPerfil(false);
+                      }}
+                      disabled={salvarMutation.isPending}
+                      className="bg-orange-500 hover:bg-orange-600 rounded-xl"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Salvar
+                    </Button>
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-sm text-slate-600 mb-2 flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        Nome Completo
+                      </label>
+                      {editandoPerfil ? (
+                        <Input
+                          value={formDataPerfil.full_name}
+                          onChange={(e) => setFormDataPerfil({...formDataPerfil, full_name: e.target.value})}
+                          className="rounded-xl"
+                        />
+                      ) : (
+                        <p className="text-slate-800 font-medium p-2">{user?.full_name || '-'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-600 mb-2 flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        Email
+                      </label>
+                      <p className="text-slate-800 font-medium p-2">{user?.email}</p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-600 mb-2 flex items-center gap-2">
+                        <Phone className="w-4 h-4" />
+                        Telefone
+                      </label>
+                      {editandoPerfil ? (
+                        <Input
+                          value={formDataPerfil.telefone}
+                          onChange={(e) => setFormDataPerfil({...formDataPerfil, telefone: e.target.value})}
+                          className="rounded-xl"
+                        />
+                      ) : (
+                        <p className="text-slate-800 font-medium p-2">{user?.telefone || '-'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-600 mb-2 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        CEP
+                      </label>
+                      {editandoPerfil ? (
+                        <Input
+                          value={formDataPerfil.cep}
+                          onChange={(e) => setFormDataPerfil({...formDataPerfil, cep: e.target.value})}
+                          className="rounded-xl"
+                        />
+                      ) : (
+                        <p className="text-slate-800 font-medium p-2">{user?.cep || '-'}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-slate-600 mb-2 flex items-center gap-2">
+                      <MapPin className="w-4 h-4" />
+                      Endereço
+                    </label>
+                    {editandoPerfil ? (
+                      <Input
+                        value={formDataPerfil.endereco}
+                        onChange={(e) => setFormDataPerfil({...formDataPerfil, endereco: e.target.value})}
+                        className="rounded-xl"
+                      />
+                    ) : (
+                      <p className="text-slate-800 font-medium p-2">{user?.endereco || '-'}</p>
+                    )}
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="text-sm text-slate-600 mb-2">Número</label>
+                      {editandoPerfil ? (
+                        <Input
+                          value={formDataPerfil.numero}
+                          onChange={(e) => setFormDataPerfil({...formDataPerfil, numero: e.target.value})}
+                          className="rounded-xl"
+                        />
+                      ) : (
+                        <p className="text-slate-800 font-medium p-2">{user?.numero || '-'}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm text-slate-600 mb-2">Complemento</label>
+                      {editandoPerfil ? (
+                        <Input
+                          value={formDataPerfil.complemento}
+                          onChange={(e) => setFormDataPerfil({...formDataPerfil, complemento: e.target.value})}
+                          className="rounded-xl"
+                        />
+                      ) : (
+                        <p className="text-slate-800 font-medium p-2">{user?.complemento || '-'}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           {/* Estatísticas */}
           <TabsContent value="estatisticas">
