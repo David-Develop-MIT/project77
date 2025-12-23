@@ -19,6 +19,7 @@ import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
+import PerfilCliente from './pages/PerfilCliente';
 import __Layout from './Layout.jsx';
 
 
@@ -44,6 +45,7 @@ export const PAGES = {
     "PerfilMotorista": PerfilMotorista,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
+    "PerfilCliente": PerfilCliente,
 }
 
 export const pagesConfig = {
