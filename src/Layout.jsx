@@ -313,8 +313,8 @@ export default function Layout({ children }) {
               isActive(item.page) ? 'text-orange-500' : 'text-slate-400'}`
               }>
 
-                <item.icon className="bg-transparent lucide lucide-house w-5 h-5" />
-                <span className="text-green-700 text-xs font-medium">{item.name}</span>
+                <item.icon className="bg-transparent text-green-700 lucide lucide-house w-5 h-5" />
+                <span className="text-xs font-medium">{item.name}</span>
               </motion.div>
             </Link>
           )}
