@@ -131,7 +131,7 @@ export default function Layout({ children }) {
                   variant={isActive(item.page) ? "default" : "ghost"}
                   className={`w-full justify-start rounded-xl ${
                   isActive(item.page) ?
-                  'bg-orange-500 hover:bg-orange-600 text-white' :
+                  'bg-emerald-600 hover:bg-emerald-700 text-white' :
                   'text-slate-600'}`
                   }>
 
@@ -231,7 +231,7 @@ export default function Layout({ children }) {
               variant={isActive(item.page) ? "default" : "ghost"}
               className={`w-full justify-start rounded-xl h-11 ${
               isActive(item.page) ?
-              'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25' :
+              'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25' :
               'text-slate-600 hover:bg-slate-100'}`
               }>
 
@@ -310,7 +310,7 @@ export default function Layout({ children }) {
               <motion.div
               whileTap={{ scale: 0.9 }}
               className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${
-              isActive(item.page) ? 'text-orange-500' : 'text-slate-400'}`
+              isActive(item.page) ? 'text-emerald-600' : 'text-slate-400'}`
               }>
 
                 <item.icon className="bg-transparent text-green-700 lucide lucide-house w-5 h-5" />
