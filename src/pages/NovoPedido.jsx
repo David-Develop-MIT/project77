@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import ServiceCard from '@/components/ServiceCard';
-import AddressForm from '@/components/AddressForm';
+import EnderecoAutocomplete from '@/components/EnderecoAutocomplete';
 import PaymentMethodCard from '@/components/PaymentMethodCard';
 import { servicoConfig } from '@/components/servicoConfig';
 import { calcularDistanciaEPreco } from '@/components/CalculadoraDistancia';
@@ -32,10 +32,14 @@ export default function NovoPedido() {
     endereco_origem: '',
     numero_origem: '',
     complemento_origem: '',
+    latitude_origem: null,
+    longitude_origem: null,
     cep_destino: '',
     endereco_destino: '',
     numero_destino: '',
     complemento_destino: '',
+    latitude_destino: null,
+    longitude_destino: null,
     distancia_km: null,
     tempo_estimado: null,
     valor_calculado: null,
@@ -49,10 +53,26 @@ export default function NovoPedido() {
     status: 'pendente'
   });
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
   const { data: precos = [] } = useQuery({
     queryKey: ['precos'],
     queryFn: () => base44.entities.TabelaPreco.list()
   });
+
+  // Preencher dados do usuário automaticamente
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        nome_cliente: user.full_name || '',
+        telefone_cliente: user.telefone || ''
+      }));
+    }
+  }, [user]);
 
   useEffect(() => {
     if (tipoInicial && servicoConfig[tipoInicial]) {
@@ -86,22 +106,35 @@ export default function NovoPedido() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleTelefoneChange = (value) => {
+    let telefone = value.replace(/\D/g, '');
+    
+    if (telefone.length > 11) telefone = telefone.slice(0, 11);
+    
+    if (telefone.length > 10) {
+      telefone = telefone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    } else if (telefone.length > 6) {
+      telefone = telefone.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+    } else if (telefone.length > 2) {
+      telefone = telefone.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+    } else if (telefone.length > 0) {
+      telefone = telefone.replace(/^(\d*)$/, '($1');
+    }
+    
+    handleChange('telefone_cliente', telefone);
+  };
+
   const handleServiceSelect = (tipo) => {
     handleChange('tipo_servico', tipo);
     setStep(2);
   };
 
   const calcularPreco = async () => {
-    if (!formData.tipo_servico || !formData.endereco_origem || !formData.numero_origem) {
+    if (!formData.tipo_servico || !formData.latitude_origem || !formData.longitude_origem) {
       return;
     }
 
-    const enderecoOrigem = `${formData.endereco_origem}, ${formData.numero_origem}${formData.complemento_origem ? ', ' + formData.complemento_origem : ''}, CEP ${formData.cep_origem}`;
-    const enderecoDestino = formData.endereco_destino && formData.numero_destino
-      ? `${formData.endereco_destino}, ${formData.numero_destino}${formData.complemento_destino ? ', ' + formData.complemento_destino : ''}, CEP ${formData.cep_destino}`
-      : '';
-
-    if (!needsDestination || !enderecoDestino) {
+    if (!needsDestination || (!formData.latitude_destino || !formData.longitude_destino)) {
       const tabelaPreco = precos.find(p => p.tipo_servico === formData.tipo_servico && p.ativo);
       if (tabelaPreco) {
         setFormData(prev => ({
@@ -119,25 +152,38 @@ export default function NovoPedido() {
     toast.loading('Calculando distância e preço...', { id: 'calc' });
 
     try {
-      const resultado = await calcularDistanciaEPreco(
-        enderecoOrigem,
-        enderecoDestino,
-        formData.tipo_servico,
-        precos
+      // Usar OSRM para calcular rota e distância
+      const response = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${formData.longitude_origem},${formData.latitude_origem};${formData.longitude_destino},${formData.latitude_destino}?overview=false`
       );
+      const data = await response.json();
 
-      if (resultado.erro) {
-        toast.error(resultado.erro, { id: 'calc' });
-      } else {
-        setFormData(prev => ({
-          ...prev,
-          distancia_km: resultado.distancia_km,
-          tempo_estimado: resultado.tempo_estimado,
-          valor_calculado: resultado.valor_calculado,
-          valor_total: resultado.valor_calculado
-        }));
-        toast.success('Preço calculado com sucesso!', { id: 'calc' });
+      if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
+        toast.error('Não foi possível calcular a rota', { id: 'calc' });
+        return;
       }
+
+      const distanciaKm = (data.routes[0].distance / 1000).toFixed(2);
+      const duracaoMinutos = Math.round(data.routes[0].duration / 60);
+      const tempoEstimado = `${duracaoMinutos} min`;
+
+      // Calcular preço
+      const tabelaPreco = precos.find(p => p.tipo_servico === formData.tipo_servico && p.ativo);
+      let valorCalculado = 0;
+
+      if (tabelaPreco) {
+        const kmExcedente = Math.max(0, distanciaKm - (tabelaPreco.km_inicial_incluido || 0));
+        valorCalculado = tabelaPreco.valor_minimo + (kmExcedente * tabelaPreco.valor_por_km);
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        distancia_km: parseFloat(distanciaKm),
+        tempo_estimado: tempoEstimado,
+        valor_calculado: valorCalculado,
+        valor_total: valorCalculado
+      }));
+      toast.success('Preço calculado com sucesso!', { id: 'calc' });
     } catch (error) {
       toast.error('Erro ao calcular preço', { id: 'calc' });
     } finally {
@@ -266,46 +312,89 @@ export default function NovoPedido() {
                     <Input
                       placeholder="(00) 00000-0000"
                       value={formData.telefone_cliente}
-                      onChange={(e) => handleChange('telefone_cliente', e.target.value)}
+                      onChange={(e) => handleTelefoneChange(e.target.value)}
+                      maxLength={15}
                       className="rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500"
                     />
                   </div>
                 </div>
 
-                <AddressForm
+                <EnderecoAutocomplete
                   label="Endereço de Origem"
-                  cep={formData.cep_origem}
-                  endereco={formData.endereco_origem}
-                  numero={formData.numero_origem}
-                  complemento={formData.complemento_origem}
-                  onCepChange={(value) => handleChange('cep_origem', value)}
-                  onEnderecoChange={(value) => handleChange('endereco_origem', value)}
-                  onNumeroChange={(value) => handleChange('numero_origem', value)}
-                  onComplementoChange={(value) => handleChange('complemento_origem', value)}
-                  required={true}
+                  placeholder="Digite o endereço de coleta..."
+                  onSelectAddress={(address) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      endereco_origem: address.endereco,
+                      numero_origem: address.numero,
+                      cep_origem: address.cep,
+                      latitude_origem: address.latitude,
+                      longitude_origem: address.longitude
+                    }));
+                  }}
                   color="text-emerald-500"
+                  required={true}
                 />
 
+                {formData.endereco_origem && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Número *"
+                      value={formData.numero_origem}
+                      onChange={(e) => handleChange('numero_origem', e.target.value)}
+                      className="rounded-xl"
+                    />
+                    <Input
+                      placeholder="Complemento"
+                      value={formData.complemento_origem}
+                      onChange={(e) => handleChange('complemento_origem', e.target.value)}
+                      className="rounded-xl"
+                    />
+                  </div>
+                )}
+
                 {needsDestination && (
-                  <AddressForm
-                    label="Endereço de Destino"
-                    cep={formData.cep_destino}
-                    endereco={formData.endereco_destino}
-                    numero={formData.numero_destino}
-                    complemento={formData.complemento_destino}
-                    onCepChange={(value) => handleChange('cep_destino', value)}
-                    onEnderecoChange={(value) => handleChange('endereco_destino', value)}
-                    onNumeroChange={(value) => handleChange('numero_destino', value)}
-                    onComplementoChange={(value) => handleChange('complemento_destino', value)}
-                    required={false}
-                    color="text-orange-500"
-                  />
+                  <>
+                    <EnderecoAutocomplete
+                      label="Endereço de Destino"
+                      placeholder="Digite o endereço de entrega..."
+                      onSelectAddress={(address) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          endereco_destino: address.endereco,
+                          numero_destino: address.numero,
+                          cep_destino: address.cep,
+                          latitude_destino: address.latitude,
+                          longitude_destino: address.longitude
+                        }));
+                      }}
+                      color="text-orange-500"
+                      required={false}
+                    />
+
+                    {formData.endereco_destino && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <Input
+                          placeholder="Número"
+                          value={formData.numero_destino}
+                          onChange={(e) => handleChange('numero_destino', e.target.value)}
+                          className="rounded-xl"
+                        />
+                        <Input
+                          placeholder="Complemento"
+                          value={formData.complemento_destino}
+                          onChange={(e) => handleChange('complemento_destino', e.target.value)}
+                          className="rounded-xl"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <div className="flex justify-end gap-3 pt-4">
                   <Button 
                     onClick={calcularPreco}
-                    disabled={!formData.endereco_origem || !formData.numero_origem || calculando}
+                    disabled={!formData.latitude_origem || calculando}
                     variant="outline"
                     className="rounded-xl"
                   >
@@ -323,7 +412,7 @@ export default function NovoPedido() {
                   </Button>
                   <Button 
                     onClick={handleContinueToStep3}
-                    disabled={!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || !formData.numero_origem || calculando}
+                    disabled={!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || calculando}
                     className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-6"
                   >
                     {calculando ? (

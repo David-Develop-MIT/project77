@@ -16,10 +16,10 @@ import Motoristas from './pages/Motoristas';
 import NovoMotorista from './pages/NovoMotorista';
 import NovoPedido from './pages/NovoPedido';
 import PedidosDisponiveis from './pages/PedidosDisponiveis';
+import PerfilCliente from './pages/PerfilCliente';
 import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
-import PerfilCliente from './pages/PerfilCliente';
 import __Layout from './Layout.jsx';
 
 
@@ -42,10 +42,10 @@ export const PAGES = {
     "NovoMotorista": NovoMotorista,
     "NovoPedido": NovoPedido,
     "PedidosDisponiveis": PedidosDisponiveis,
+    "PerfilCliente": PerfilCliente,
     "PerfilMotorista": PerfilMotorista,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
-    "PerfilCliente": PerfilCliente,
 }
 
 export const pagesConfig = {
