@@ -68,7 +68,8 @@ export default function Layout({ children }) {
     { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
     { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
     { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
-    { name: 'Meus Veículos', icon: Truck, page: 'MeusVeiculos' }
+    { name: 'Meus Veículos', icon: Truck, page: 'MeusVeiculos' },
+    { name: 'Perfil', icon: User, page: 'PerfilMotorista' }
   ];
 
   const navItems = modoAtivo === 'motorista' ? navItemsMotorista : navItemsCliente;
