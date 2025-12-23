@@ -91,7 +91,11 @@ export default function Layout({ children }) {
         <div className="flex items-center justify-between px-4 h-16">
           <Link to={createPageUrl('Home')} className="flex items-center gap-2">
             <div className="bg-emerald-800 rounded-xl w-9 h-9 from-orange-500 to-orange-600 flex items-center justify-center">
-              <Package className="w-5 h-5 text-white" />
+              <svg width="20" height="20" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(0,300) scale(0.1,-0.1)" fill="white" stroke="none">
+                  <path d="M660 1835 l0 -665 52 41 c99 78 218 127 478 200 63 17 133 40 155 50 50 24 86 75 93 134 l5 45 -122 0 c-66 0 -121 3 -121 6 0 6 429 494 435 494 2 0 88 -98 191 -217 103 -120 199 -231 213 -246 l26 -28 -37 16 c-53 22 -97 19 -156 -11 l-52 -26 0 -49 c0 -96 -53 -211 -127 -273 -45 -38 -85 -52 -293 -106 -305 -79 -408 -129 -502 -245 -26 -32 -62 -93 -80 -134 -30 -72 -32 -84 -36 -229 -4 -147 -3 -157 23 -230 15 -42 38 -98 51 -124 l24 -48 170 0 170 0 2 418 3 417 245 5 c234 5 251 7 374 38 178 45 286 101 386 202 134 134 200 299 200 494 0 130 -19 218 -70 322 -75 155 -229 289 -403 352 -164 59 -197 62 -773 62 l-524 0 0 -665z"/>
+                </g>
+              </svg>
             </div>
             <span className="font-bold text-slate-800">Pickup Brasil</span>
           </Link>
@@ -213,7 +217,11 @@ export default function Layout({ children }) {
         <div className="flex items-center justify-between mb-8 px-2">
           <Link to={createPageUrl('Home')} className="flex items-center gap-3">
             <div className="bg-emerald-700 rounded-xl w-10 h-10 from-orange-500 to-orange-600 flex items-center justify-center">
-              <Package className="w-6 h-6 text-white" />
+              <svg width="24" height="24" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(0,300) scale(0.1,-0.1)" fill="white" stroke="none">
+                  <path d="M660 1835 l0 -665 52 41 c99 78 218 127 478 200 63 17 133 40 155 50 50 24 86 75 93 134 l5 45 -122 0 c-66 0 -121 3 -121 6 0 6 429 494 435 494 2 0 88 -98 191 -217 103 -120 199 -231 213 -246 l26 -28 -37 16 c-53 22 -97 19 -156 -11 l-52 -26 0 -49 c0 -96 -53 -211 -127 -273 -45 -38 -85 -52 -293 -106 -305 -79 -408 -129 -502 -245 -26 -32 -62 -93 -80 -134 -30 -72 -32 -84 -36 -229 -4 -147 -3 -157 23 -230 15 -42 38 -98 51 -124 l24 -48 170 0 170 0 2 418 3 417 245 5 c234 5 251 7 374 38 178 45 286 101 386 202 134 134 200 299 200 494 0 130 -19 218 -70 322 -75 155 -229 289 -403 352 -164 59 -197 62 -773 62 l-524 0 0 -665z"/>
+                </g>
+              </svg>
             </div>
             <span className="font-bold text-xl text-slate-800">Pickup Brasil</span>
           </Link>
