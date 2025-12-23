@@ -133,6 +133,11 @@ export default function CompletarPerfil() {
       return;
     }
 
+    if (!formData.numero.trim()) {
+      toast.error('Por favor, preencha o número do endereço');
+      return;
+    }
+
     if (formData.tipos_conta.length === 0) {
       toast.error('Selecione pelo menos um tipo de conta');
       return;
@@ -260,10 +265,11 @@ export default function CompletarPerfil() {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <Input
-                      placeholder="Número"
+                      placeholder="Número *"
                       value={formData.numero}
                       onChange={(e) => setFormData(prev => ({ ...prev, numero: e.target.value }))}
                       className="rounded-xl"
+                      required
                     />
                     <Input
                       placeholder="Complemento"
