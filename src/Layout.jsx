@@ -42,11 +42,10 @@ export default function Layout({ children }) {
 
   // Redirecionar para completar perfil se necessário
   React.useEffect(() => {
-    const perfilCompleto = user?.perfil_completo || 
-                          (user?.full_name && user?.telefone && user?.tipos_conta?.length > 0);
-    
-    if (user && !perfilCompleto && location.pathname !== createPageUrl('CompletarPerfil')) {
-      navigate(createPageUrl('CompletarPerfil'));
+    const perfilCompleto = user?.perfil_completo || user?.tipos_conta?.length > 0;
+
+    if (user && !perfilCompleto && location.pathname !== createPageUrl('CompletarPerfilInicial')) {
+      navigate(createPageUrl('CompletarPerfilInicial'));
     }
   }, [user, location, navigate]);
 
@@ -67,7 +66,6 @@ export default function Layout({ children }) {
     { name: 'Chat', icon: MessageCircle, page: 'Chat' },
     { name: 'Carteira', icon: Wallet, page: 'Carteira' },
     { name: 'Perfil', icon: User, page: 'PerfilCliente' },
-    { name: 'Token Login', icon: User, page: 'TokenLogin' },
     ...((user?.tipos_conta && user.tipos_conta.includes('motorista')) ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])
   ];
 

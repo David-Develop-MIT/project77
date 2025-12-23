@@ -26,6 +26,7 @@ import TornarseMotorista from './pages/TornarseMotorista';
 import TokenLogin from './pages/TokenLogin';
 import CadastroTokenLogin from './pages/CadastroTokenLogin';
 import RecuperarToken from './pages/RecuperarToken';
+import CompletarPerfilInicial from './pages/CompletarPerfilInicial';
 import __Layout from './Layout.jsx';
 
 
@@ -58,6 +59,7 @@ export const PAGES = {
     "TokenLogin": TokenLogin,
     "CadastroTokenLogin": CadastroTokenLogin,
     "RecuperarToken": RecuperarToken,
+    "CompletarPerfilInicial": CompletarPerfilInicial,
 }
 
 export const pagesConfig = {
