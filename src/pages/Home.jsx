@@ -43,7 +43,7 @@ export default function Home() {
             </p>
           </div>
           <Link to={createPageUrl('NovoPedido')}>
-            <Button className="bg-emerald-700 text-white px-6 py-2 text-sm font-medium rounded-xl inline-flex items-center justify-center gap-2 whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-primary/90 h-9 from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/25">
+            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg shadow-emerald-500/25 rounded-xl px-6">
               <Plus className="w-5 h-5 mr-2" />
               Novo Pedido
             </Button>

@@ -1,3 +1,7 @@
+import AdminBoost from './pages/AdminBoost';
+import AdminFaturas from './pages/AdminFaturas';
+import Carteira from './pages/Carteira';
+import Chat from './pages/Chat';
 import DetalheMotorista from './pages/DetalheMotorista';
 import DetalhePedido from './pages/DetalhePedido';
 import EscolherPerfil from './pages/EscolherPerfil';
@@ -10,17 +14,17 @@ import Motoristas from './pages/Motoristas';
 import NovoMotorista from './pages/NovoMotorista';
 import NovoPedido from './pages/NovoPedido';
 import PedidosDisponiveis from './pages/PedidosDisponiveis';
+import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
-import PerfilMotorista from './pages/PerfilMotorista';
-import Chat from './pages/Chat';
-import Carteira from './pages/Carteira';
-import AdminFaturas from './pages/AdminFaturas';
-import AdminBoost from './pages/AdminBoost';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AdminBoost": AdminBoost,
+    "AdminFaturas": AdminFaturas,
+    "Carteira": Carteira,
+    "Chat": Chat,
     "DetalheMotorista": DetalheMotorista,
     "DetalhePedido": DetalhePedido,
     "EscolherPerfil": EscolherPerfil,
@@ -33,13 +37,9 @@ export const PAGES = {
     "NovoMotorista": NovoMotorista,
     "NovoPedido": NovoPedido,
     "PedidosDisponiveis": PedidosDisponiveis,
+    "PerfilMotorista": PerfilMotorista,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
-    "PerfilMotorista": PerfilMotorista,
-    "Chat": Chat,
-    "Carteira": Carteira,
-    "AdminFaturas": AdminFaturas,
-    "AdminBoost": AdminBoost,
 }
 
 export const pagesConfig = {
