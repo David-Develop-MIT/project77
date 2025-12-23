@@ -12,6 +12,8 @@ import NotificationBell from '@/components/NotificationBell';
 import NotificationPanel from '@/components/NotificationPanel';
 import AvaliacaoDisplay from '@/components/AvaliacaoDisplay';
 import { useNotifications } from '@/components/useNotifications';
+import NotificacaoAlocacao from '@/components/NotificacaoAlocacao';
+import AtualizarLocalizacao from '@/components/AtualizarLocalizacao';
 
 export default function Layout({ children }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -329,6 +331,12 @@ export default function Layout({ children }) {
         isOpen={notificationPanelOpen}
         onClose={() => setNotificationPanelOpen(false)}
       />
+
+      {/* Notificação de Alocação Automática (apenas para motoristas) */}
+      {modoAtivo === 'motorista' && <NotificacaoAlocacao />}
+
+      {/* Atualização de Localização em Background (apenas para motoristas) */}
+      {modoAtivo === 'motorista' && <AtualizarLocalizacao />}
     </div>
   );
 }
