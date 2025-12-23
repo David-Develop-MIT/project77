@@ -68,12 +68,37 @@ export default function CompletarPerfil() {
   };
 
   const handleCepChange = (e) => {
-    const valor = e.target.value;
+    let valor = e.target.value.replace(/\D/g, '');
+    
+    if (valor.length > 8) valor = valor.slice(0, 8);
+    
+    if (valor.length > 5) {
+      valor = valor.slice(0, 5) + '-' + valor.slice(5);
+    }
+    
     setFormData(prev => ({ ...prev, cep: valor }));
     
     if (valor.replace(/\D/g, '').length === 8) {
       buscarCep(valor);
     }
+  };
+
+  const handleTelefoneChange = (e) => {
+    let valor = e.target.value.replace(/\D/g, '');
+    
+    if (valor.length > 11) valor = valor.slice(0, 11);
+    
+    if (valor.length > 10) {
+      valor = valor.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3');
+    } else if (valor.length > 6) {
+      valor = valor.replace(/^(\d{2})(\d{4})(\d{0,4})$/, '($1) $2-$3');
+    } else if (valor.length > 2) {
+      valor = valor.replace(/^(\d{2})(\d{0,5})$/, '($1) $2');
+    } else if (valor.length > 0) {
+      valor = valor.replace(/^(\d*)$/, '($1');
+    }
+    
+    setFormData(prev => ({ ...prev, telefone: valor }));
   };
 
   const atualizarPerfilMutation = useMutation({
@@ -98,8 +123,13 @@ export default function CompletarPerfil() {
       return;
     }
 
-    if (!formData.telefone.trim()) {
-      toast.error('Por favor, preencha seu telefone');
+    if (!formData.telefone.trim() || formData.telefone.replace(/\D/g, '').length < 10) {
+      toast.error('Por favor, preencha um telefone válido');
+      return;
+    }
+
+    if (!formData.cep.trim() || formData.cep.replace(/\D/g, '').length !== 8) {
+      toast.error('Por favor, preencha um CEP válido');
       return;
     }
 
@@ -186,9 +216,10 @@ export default function CompletarPerfil() {
                   <Input
                     id="telefone"
                     value={formData.telefone}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, telefone: e.target.value }))}
+                    onChange={handleTelefoneChange}
                     placeholder="(00) 00000-0000"
                     className="rounded-xl"
+                    maxLength={15}
                     required />
 
                 </div>
@@ -198,7 +229,7 @@ export default function CompletarPerfil() {
               <div className="pt-4 border-t border-slate-200">
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  Endereço (Opcional)
+                  Endereço
                 </h3>
                 <div className="grid gap-4">
                   <div className="relative">
@@ -208,6 +239,7 @@ export default function CompletarPerfil() {
                       onChange={handleCepChange}
                       className="rounded-xl"
                       maxLength={9}
+                      required
                     />
                     {buscandoCep && (
                       <Loader2 className="w-4 h-4 animate-spin absolute right-3 top-3 text-slate-400" />
