@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import { Package, MapPin, DollarSign, Clock, Navigation, CheckCircle } from 'lucide-react';
+import { Package, MapPin, DollarSign, Clock, Navigation, CheckCircle, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { servicoConfig } from '@/components/servicoConfig';
 import { toast } from 'sonner';
 
 export default function PedidosDisponiveis() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -183,12 +184,11 @@ export default function PedidosDisponiveis() {
                           </Button>
                         </Link>
                         <Button
-                          onClick={() => handleAceitar(pedido)}
-                          disabled={aceitarMutation.isPending}
+                          onClick={() => navigate(`${createPageUrl('FazerOferta')}?pedido=${pedido.id}`)}
                           className="flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
                         >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Aceitar
+                          <Send className="w-4 h-4 mr-2" />
+                          Fazer Oferta
                         </Button>
                       </div>
                     </CardContent>

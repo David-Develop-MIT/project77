@@ -397,6 +397,11 @@ export default function DetalhePedido() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Ofertas */}
+            {isCliente && (
+              <OfertasPedido pedidoId={pedidoId} pedido={pedido} />
+            )}
           </motion.div>
 
           {/* Sidebar */}
