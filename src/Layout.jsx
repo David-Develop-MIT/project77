@@ -68,6 +68,7 @@ export default function Layout({ children }) {
     { name: 'Chat', icon: MessageCircle, page: 'Chat' },
     { name: 'Carteira', icon: Wallet, page: 'Carteira' },
     { name: 'Perfil', icon: User, page: 'PerfilCliente' },
+    { name: 'Token Login', icon: User, page: 'TokenLogin' },
     ...((user?.tipos_conta && user.tipos_conta.includes('motorista')) ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])
   ];
 
