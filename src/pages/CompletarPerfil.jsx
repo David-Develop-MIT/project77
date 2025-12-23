@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 export default function CompletarPerfil() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   const [formData, setFormData] = useState({
     full_name: '',
     telefone: '',
@@ -23,7 +23,7 @@ export default function CompletarPerfil() {
     cidade: '',
     estado: '',
     cep: '',
-    tipos_conta: [],
+    tipos_conta: []
   });
 
   const { data: user } = useQuery({
@@ -47,17 +47,17 @@ export default function CompletarPerfil() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.full_name.trim()) {
       toast.error('Por favor, preencha seu nome completo');
       return;
     }
-    
+
     if (!formData.telefone.trim()) {
       toast.error('Por favor, preencha seu telefone');
       return;
     }
-    
+
     if (formData.tipos_conta.length === 0) {
       toast.error('Selecione pelo menos um tipo de conta');
       return;
@@ -73,20 +73,20 @@ export default function CompletarPerfil() {
   };
 
   const toggleTipoConta = (tipo) => {
-    setFormData(prev => {
-      const tipos = prev.tipos_conta.includes(tipo)
-        ? prev.tipos_conta.filter(t => t !== tipo)
-        : [...prev.tipos_conta, tipo];
+    setFormData((prev) => {
+      const tipos = prev.tipos_conta.includes(tipo) ?
+      prev.tipos_conta.filter((t) => t !== tipo) :
+      [...prev.tipos_conta, tipo];
       return { ...prev, tipos_conta: tipos };
     });
   };
 
   React.useEffect(() => {
     if (user?.full_name) {
-      setFormData(prev => ({ ...prev, full_name: user.full_name }));
+      setFormData((prev) => ({ ...prev, full_name: user.full_name }));
     }
     if (user?.email) {
-      setFormData(prev => ({ ...prev, email: user.email }));
+      setFormData((prev) => ({ ...prev, email: user.email }));
     }
   }, [user]);
 
@@ -95,14 +95,14 @@ export default function CompletarPerfil() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-2xl"
-      >
+        className="w-full max-w-2xl">
+
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Package className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">
-            Bem-vindo ao Pickup Brasil!
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">Bem-vindo ao Pickup
+
           </h1>
           <p className="text-slate-600">
             Complete seu perfil para começar a usar nossa plataforma
@@ -126,11 +126,11 @@ export default function CompletarPerfil() {
                   <Input
                     id="full_name"
                     value={formData.full_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, full_name: e.target.value }))}
                     placeholder="Seu nome completo"
                     className="rounded-xl"
-                    required
-                  />
+                    required />
+
                 </div>
 
                 <div>
@@ -141,11 +141,11 @@ export default function CompletarPerfil() {
                   <Input
                     id="telefone"
                     value={formData.telefone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, telefone: e.target.value }))}
                     placeholder="(00) 00000-0000"
                     className="rounded-xl"
-                    required
-                  />
+                    required />
+
                 </div>
               </div>
 
@@ -160,32 +160,32 @@ export default function CompletarPerfil() {
                     <Input
                       placeholder="CEP"
                       value={formData.cep}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cep: e.target.value }))}
-                      className="rounded-xl"
-                    />
+                      onChange={(e) => setFormData((prev) => ({ ...prev, cep: e.target.value }))}
+                      className="rounded-xl" />
+
                     <Input
                       placeholder="Cidade"
                       value={formData.cidade}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
-                      className="rounded-xl"
-                    />
+                      onChange={(e) => setFormData((prev) => ({ ...prev, cidade: e.target.value }))}
+                      className="rounded-xl" />
+
                   </div>
                   <div className="grid grid-cols-3 gap-4">
                     <div className="col-span-2">
                       <Input
                         placeholder="Endereço"
                         value={formData.endereco}
-                        onChange={(e) => setFormData(prev => ({ ...prev, endereco: e.target.value }))}
-                        className="rounded-xl"
-                      />
+                        onChange={(e) => setFormData((prev) => ({ ...prev, endereco: e.target.value }))}
+                        className="rounded-xl" />
+
                     </div>
                     <Input
                       placeholder="Estado"
                       value={formData.estado}
-                      onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, estado: e.target.value }))}
                       className="rounded-xl"
-                      maxLength={2}
-                    />
+                      maxLength={2} />
+
                   </div>
                 </div>
               </div>
@@ -201,17 +201,17 @@ export default function CompletarPerfil() {
                     whileTap={{ scale: 0.98 }}
                     onClick={() => toggleTipoConta('cliente')}
                     className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                      formData.tipos_conta.includes('cliente')
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
+                    formData.tipos_conta.includes('cliente') ?
+                    'border-blue-500 bg-blue-50' :
+                    'border-slate-200 bg-white hover:border-slate-300'}`
+                    }>
+
                     <div className="flex items-start gap-3">
                       <Checkbox
                         checked={formData.tipos_conta.includes('cliente')}
                         onCheckedChange={() => toggleTipoConta('cliente')}
-                        className="mt-1"
-                      />
+                        className="mt-1" />
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <Package className="w-5 h-5 text-blue-600" />
@@ -229,17 +229,17 @@ export default function CompletarPerfil() {
                     whileTap={{ scale: 0.98 }}
                     onClick={() => toggleTipoConta('motorista')}
                     className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
-                      formData.tipos_conta.includes('motorista')
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
+                    formData.tipos_conta.includes('motorista') ?
+                    'border-orange-500 bg-orange-50' :
+                    'border-slate-200 bg-white hover:border-slate-300'}`
+                    }>
+
                     <div className="flex items-start gap-3">
                       <Checkbox
                         checked={formData.tipos_conta.includes('motorista')}
                         onCheckedChange={() => toggleTipoConta('motorista')}
-                        className="mt-1"
-                      />
+                        className="mt-1" />
+
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <Truck className="w-5 h-5 text-orange-600" />
@@ -257,19 +257,19 @@ export default function CompletarPerfil() {
               <Button
                 type="submit"
                 disabled={atualizarPerfilMutation.isPending}
-                className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl h-12 text-base font-semibold"
-              >
-                {atualizarPerfilMutation.isPending ? (
-                  <>
+                className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl h-12 text-base font-semibold">
+
+                {atualizarPerfilMutation.isPending ?
+                <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Salvando...
-                  </>
-                ) : (
-                  <>
+                  </> :
+
+                <>
                     Continuar
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </>
-                )}
+                }
               </Button>
             </form>
           </CardContent>
@@ -279,6 +279,6 @@ export default function CompletarPerfil() {
           Suas informações são seguras e protegidas
         </p>
       </motion.div>
-    </div>
-  );
+    </div>);
+
 }
