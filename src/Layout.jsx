@@ -70,7 +70,7 @@ export default function Layout({ children }) {
   const navItemsMotorista = [
   { name: 'Home', icon: Home, page: 'Home' },
   { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
-  { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
+  { name: 'Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
   { name: 'Chat', icon: MessageCircle, page: 'Chat' },
   { name: 'Carteira', icon: Wallet, page: 'Carteira' },
   { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
