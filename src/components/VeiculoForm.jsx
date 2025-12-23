@@ -69,9 +69,9 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
 
   const toggleModalidade = (modalidade) => {
     setFormData(prev => {
-      const modalidades = prev.modalidades.includes(modalidade)
-        ? prev.modalidades.filter(m => m !== modalidade)
-        : [...prev.modalidades, modalidade];
+      const modalidades = (prev.modalidades || []).includes(modalidade)
+        ? (prev.modalidades || []).filter(m => m !== modalidade)
+        : [...(prev.modalidades || []), modalidade];
       return { ...prev, modalidades };
     });
   };
@@ -138,17 +138,23 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
                 {modalidadesServico.map((modalidade) => (
                   <div
                     key={modalidade.value}
-                    onClick={() => toggleModalidade(modalidade.value)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleModalidade(modalidade.value);
+                    }}
                     className={`cursor-pointer rounded-xl border-2 p-3 transition-all ${
-                      formData.modalidades.includes(modalidade.value)
+                      (formData.modalidades || []).includes(modalidade.value)
                         ? 'border-orange-500 bg-orange-50'
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <Checkbox
-                        checked={formData.modalidades.includes(modalidade.value)}
-                        onCheckedChange={() => toggleModalidade(modalidade.value)}
+                        checked={(formData.modalidades || []).includes(modalidade.value)}
+                        onCheckedChange={(checked) => {
+                          toggleModalidade(modalidade.value);
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                       />
                       <span className="text-sm font-medium">{modalidade.label}</span>
                     </div>
