@@ -54,9 +54,12 @@ export default function Layout({ children }) {
 
   const handleLogout = async () => {
     toast.success('Até logo!');
-    setTimeout(() => {
-      navigate(createPageUrl('TokenLogin'));
-    }, 500);
+    // Limpar dados salvos
+    localStorage.removeItem('pickupLogin_email');
+    localStorage.removeItem('pickupLogin_token');
+    localStorage.removeItem('pickupLogin_credentialId');
+    // Fazer logout do base44
+    await base44.auth.logout(createPageUrl('TokenLogin'));
   };
 
   const navItemsCliente = [
