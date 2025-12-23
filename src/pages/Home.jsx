@@ -41,7 +41,7 @@ export default function Home() {
 
           <div>
             <h1 className="text-3xl font-bold text-slate-800">
-              Painel de Entregas
+              {user?.modo_ativo === 'motorista' ? 'Parceiro Pickup' : 'Cliente Pickup'}
             </h1>
             <p className="text-slate-500 mt-1">
               Gerencie todos os seus serviços em um só lugar
