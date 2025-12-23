@@ -70,7 +70,7 @@ export default function Layout({ children }) {
   const navItemsMotorista = [
   { name: 'Home', icon: Home, page: 'Home' },
   { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
-  { name: 'Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
+  { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
   { name: 'Chat', icon: MessageCircle, page: 'Chat' },
   { name: 'Carteira', icon: Wallet, page: 'Carteira' },
   { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
@@ -131,7 +131,7 @@ export default function Layout({ children }) {
                   variant={isActive(item.page) ? "default" : "ghost"}
                   className={`w-full justify-start rounded-xl ${
                   isActive(item.page) ?
-                  'bg-emerald-600 hover:bg-emerald-700 text-white' :
+                  'bg-orange-500 hover:bg-orange-600 text-white' :
                   'text-slate-600'}`
                   }>
 
@@ -212,10 +212,10 @@ export default function Layout({ children }) {
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-100 flex-col p-4 z-50">
         <div className="flex items-center justify-between mb-8 px-2">
           <Link to={createPageUrl('Home')} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+            <div className="bg-emerald-700 rounded-xl w-10 h-10 from-orange-500 to-orange-600 flex items-center justify-center">
               <Package className="w-6 h-6 text-white" />
             </div>
-            <span className="font-bold text-xl text-slate-800">Entregas</span>
+            <span className="font-bold text-xl text-slate-800">Pickup Brasil</span>
           </Link>
           <NotificationBell
             count={totalNaoLidas}
@@ -231,7 +231,7 @@ export default function Layout({ children }) {
               variant={isActive(item.page) ? "default" : "ghost"}
               className={`w-full justify-start rounded-xl h-11 ${
               isActive(item.page) ?
-              'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/25' :
+              'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25' :
               'text-slate-600 hover:bg-slate-100'}`
               }>
 
@@ -310,11 +310,11 @@ export default function Layout({ children }) {
               <motion.div
               whileTap={{ scale: 0.9 }}
               className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${
-              isActive(item.page) ? 'text-emerald-600' : 'text-slate-400'}`
+              isActive(item.page) ? 'text-orange-500' : 'text-slate-400'}`
               }>
 
-                <item.icon className="bg-transparent text-green-700 lucide lucide-house w-5 h-5" />
-                <span className="text-xs font-medium">{item.name}</span>
+                <item.icon className="bg-transparent lucide lucide-house w-5 h-5" />
+                <span className="text-green-700 text-xs font-medium">{item.name}</span>
               </motion.div>
             </Link>
           )}
