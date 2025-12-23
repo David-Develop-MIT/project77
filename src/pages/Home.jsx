@@ -11,6 +11,11 @@ import PedidoCard from '@/components/PedidoCard';
 import { servicoConfig } from '@/components/servicoConfig';
 
 export default function Home() {
+  const { data: user } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me()
+  });
+
   const { data: pedidos = [], isLoading } = useQuery({
     queryKey: ['pedidos'],
     queryFn: () => base44.entities.Pedido.list('-created_date', 50)
@@ -42,12 +47,14 @@ export default function Home() {
               Gerencie todos os seus serviços em um só lugar
             </p>
           </div>
-          <Link to={createPageUrl('NovoPedido')}>
-            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg shadow-emerald-500/25 rounded-xl px-6">
-              <Plus className="w-5 h-5 mr-2" />
-              Novo Pedido
-            </Button>
-          </Link>
+          {user?.modo_ativo === 'cliente' && (
+            <Link to={createPageUrl('NovoPedido')}>
+              <Button className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg shadow-emerald-500/25 rounded-xl px-6">
+                <Plus className="w-5 h-5 mr-2" />
+                Novo Pedido
+              </Button>
+            </Link>
+          )}
         </motion.div>
 
         {/* Stats */}
@@ -82,40 +89,42 @@ export default function Home() {
 
         </div>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mb-8">
+        {/* Quick Actions - Apenas para clientes */}
+        {user?.modo_ativo === 'cliente' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8">
 
-          <h2 className="text-lg font-semibold text-slate-800 mb-4">Serviços Disponíveis</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {Object.entries(servicoConfig).map(([key, config]) => {
-              const Icon = config.icon;
-              return (
-                <Link
-                  key={key}
-                  to={`${createPageUrl('NovoPedido')}?tipo=${key}`}>
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">Serviços Disponíveis</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {Object.entries(servicoConfig).map(([key, config]) => {
+                const Icon = config.icon;
+                return (
+                  <Link
+                    key={key}
+                    to={`${createPageUrl('NovoPedido')}?tipo=${key}`}>
 
-                  <motion.div
-                    whileHover={{ scale: 1.03, y: -2 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="bg-white rounded-xl p-4 border border-slate-100 hover:shadow-lg transition-all duration-300 cursor-pointer text-center">
+                    <motion.div
+                      whileHover={{ scale: 1.03, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="bg-white rounded-xl p-4 border border-slate-100 hover:shadow-lg transition-all duration-300 cursor-pointer text-center">
 
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
-                      style={{ backgroundColor: `${config.color}15` }}>
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
+                        style={{ backgroundColor: `${config.color}15` }}>
 
-                      <Icon className="w-6 h-6" style={{ color: config.color }} />
-                    </div>
-                    <p className="font-medium text-slate-700 text-sm">{config.title}</p>
-                  </motion.div>
-                </Link>);
+                        <Icon className="w-6 h-6" style={{ color: config.color }} />
+                      </div>
+                      <p className="font-medium text-slate-700 text-sm">{config.title}</p>
+                    </motion.div>
+                  </Link>);
 
-            })}
-          </div>
-        </motion.div>
+              })}
+            </div>
+          </motion.div>
+        )}
 
         {/* Recent Orders */}
         <motion.div
