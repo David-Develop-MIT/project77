@@ -15,14 +15,14 @@ import MeusVeiculos from './pages/MeusVeiculos';
 import Motoristas from './pages/Motoristas';
 import NovoMotorista from './pages/NovoMotorista';
 import NovoPedido from './pages/NovoPedido';
+import PagamentoCancelado from './pages/PagamentoCancelado';
+import PagamentoPix from './pages/PagamentoPix';
+import PagamentoSucesso from './pages/PagamentoSucesso';
 import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import PerfilCliente from './pages/PerfilCliente';
 import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
-import PagamentoSucesso from './pages/PagamentoSucesso';
-import PagamentoCancelado from './pages/PagamentoCancelado';
-import PagamentoPix from './pages/PagamentoPix';
 import __Layout from './Layout.jsx';
 
 
@@ -44,14 +44,14 @@ export const PAGES = {
     "Motoristas": Motoristas,
     "NovoMotorista": NovoMotorista,
     "NovoPedido": NovoPedido,
+    "PagamentoCancelado": PagamentoCancelado,
+    "PagamentoPix": PagamentoPix,
+    "PagamentoSucesso": PagamentoSucesso,
     "PedidosDisponiveis": PedidosDisponiveis,
     "PerfilCliente": PerfilCliente,
     "PerfilMotorista": PerfilMotorista,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
-    "PagamentoSucesso": PagamentoSucesso,
-    "PagamentoCancelado": PagamentoCancelado,
-    "PagamentoPix": PagamentoPix,
 }
 
 export const pagesConfig = {
