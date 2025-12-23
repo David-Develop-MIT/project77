@@ -20,16 +20,61 @@ export default function CompletarPerfil() {
     full_name: '',
     telefone: '',
     endereco: '',
+    bairro: '',
     cidade: '',
     estado: '',
+    pais: 'Brasil',
     cep: '',
+    numero: '',
+    complemento: '',
     tipos_conta: [],
   });
+
+  const [buscandoCep, setBuscandoCep] = useState(false);
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me()
   });
+
+  const buscarCep = async (cep) => {
+    const cepLimpo = cep.replace(/\D/g, '');
+    
+    if (cepLimpo.length !== 8) return;
+    
+    setBuscandoCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
+      const data = await response.json();
+      
+      if (!data.erro) {
+        setFormData(prev => ({
+          ...prev,
+          endereco: data.logradouro || '',
+          bairro: data.bairro || '',
+          cidade: data.localidade || '',
+          estado: data.uf || '',
+          pais: 'Brasil'
+        }));
+        toast.success('CEP encontrado!');
+      } else {
+        toast.error('CEP não encontrado');
+      }
+    } catch (error) {
+      toast.error('Erro ao buscar CEP');
+    } finally {
+      setBuscandoCep(false);
+    }
+  };
+
+  const handleCepChange = (e) => {
+    const valor = e.target.value;
+    setFormData(prev => ({ ...prev, cep: valor }));
+    
+    if (valor.replace(/\D/g, '').length === 8) {
+      buscarCep(valor);
+    }
+  };
 
   const atualizarPerfilMutation = useMutation({
     mutationFn: async (data) => {
@@ -156,37 +201,75 @@ export default function CompletarPerfil() {
                   Endereço (Opcional)
                 </h3>
                 <div className="grid gap-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="relative">
                     <Input
                       placeholder="CEP"
                       value={formData.cep}
-                      onChange={(e) => setFormData(prev => ({ ...prev, cep: e.target.value }))}
+                      onChange={handleCepChange}
+                      className="rounded-xl"
+                      maxLength={9}
+                    />
+                    {buscandoCep && (
+                      <Loader2 className="w-4 h-4 animate-spin absolute right-3 top-3 text-slate-400" />
+                    )}
+                  </div>
+                  
+                  <Input
+                    placeholder="Endereço"
+                    value={formData.endereco}
+                    onChange={(e) => setFormData(prev => ({ ...prev, endereco: e.target.value }))}
+                    className="rounded-xl"
+                    readOnly={buscandoCep}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <Input
+                      placeholder="Número"
+                      value={formData.numero}
+                      onChange={(e) => setFormData(prev => ({ ...prev, numero: e.target.value }))}
                       className="rounded-xl"
                     />
+                    <Input
+                      placeholder="Complemento"
+                      value={formData.complemento}
+                      onChange={(e) => setFormData(prev => ({ ...prev, complemento: e.target.value }))}
+                      className="rounded-xl"
+                    />
+                  </div>
+
+                  <Input
+                    placeholder="Bairro"
+                    value={formData.bairro}
+                    onChange={(e) => setFormData(prev => ({ ...prev, bairro: e.target.value }))}
+                    className="rounded-xl"
+                    readOnly={buscandoCep}
+                  />
+                  
+                  <div className="grid grid-cols-2 gap-4">
                     <Input
                       placeholder="Cidade"
                       value={formData.cidade}
                       onChange={(e) => setFormData(prev => ({ ...prev, cidade: e.target.value }))}
                       className="rounded-xl"
+                      readOnly={buscandoCep}
                     />
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-2">
-                      <Input
-                        placeholder="Endereço"
-                        value={formData.endereco}
-                        onChange={(e) => setFormData(prev => ({ ...prev, endereco: e.target.value }))}
-                        className="rounded-xl"
-                      />
-                    </div>
                     <Input
                       placeholder="Estado"
                       value={formData.estado}
                       onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
                       className="rounded-xl"
                       maxLength={2}
+                      readOnly={buscandoCep}
                     />
                   </div>
+
+                  <Input
+                    placeholder="País"
+                    value={formData.pais}
+                    onChange={(e) => setFormData(prev => ({ ...prev, pais: e.target.value }))}
+                    className="rounded-xl"
+                    readOnly
+                  />
                 </div>
               </div>
 
