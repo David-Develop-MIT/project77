@@ -97,6 +97,11 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
       return;
     }
 
+    if (!formData.nome_motorista) {
+      toast.error('Preencha o nome do motorista');
+      return;
+    }
+
     if (!formData.modalidades || formData.modalidades.length === 0) {
       toast.error('Selecione pelo menos uma modalidade de serviço');
       return;
@@ -233,12 +238,13 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
                 />
               </div>
               <div>
-                <Label>Nome do Motorista</Label>
+                <Label>Nome do Motorista *</Label>
                 <Input
                   value={formData.nome_motorista}
                   onChange={(e) => handleChange('nome_motorista', e.target.value)}
                   placeholder="Nome completo"
                   className="rounded-xl"
+                  required
                 />
               </div>
             </div>
