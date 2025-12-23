@@ -40,10 +40,10 @@ export default function Layout({ children }) {
     }
   });
 
-  // Redirecionar para escolha de perfil se necessário
+  // Redirecionar para completar perfil se necessário
   React.useEffect(() => {
-    if (user && !user.tipos_conta?.length && location.pathname !== createPageUrl('EscolherPerfil')) {
-      navigate(createPageUrl('EscolherPerfil'));
+    if (user && !user.perfil_completo && location.pathname !== createPageUrl('CompletarPerfil')) {
+      navigate(createPageUrl('CompletarPerfil'));
     }
   }, [user, location, navigate]);
 

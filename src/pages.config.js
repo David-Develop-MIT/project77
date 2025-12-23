@@ -17,6 +17,7 @@ import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
+import CompletarPerfil from './pages/CompletarPerfil';
 import __Layout from './Layout.jsx';
 
 
@@ -40,6 +41,7 @@ export const PAGES = {
     "PerfilMotorista": PerfilMotorista,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
+    "CompletarPerfil": CompletarPerfil,
 }
 
 export const pagesConfig = {
