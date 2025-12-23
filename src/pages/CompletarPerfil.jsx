@@ -104,13 +104,18 @@ export default function CompletarPerfil() {
   const atualizarPerfilMutation = useMutation({
     mutationFn: async (data) => {
       await base44.auth.updateMe(data);
+      return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['currentUser']);
+    onSuccess: async () => {
+      await queryClient.invalidateQueries(['currentUser']);
+      await queryClient.refetchQueries(['currentUser']);
       toast.success('Perfil criado com sucesso!');
-      navigate(createPageUrl('Home'));
+      setTimeout(() => {
+        navigate(createPageUrl('Home'));
+      }, 500);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro ao atualizar perfil:', error);
       toast.error('Erro ao criar perfil. Tente novamente.');
     }
   });

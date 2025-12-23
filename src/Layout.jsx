@@ -42,7 +42,10 @@ export default function Layout({ children }) {
 
   // Redirecionar para completar perfil se necessário
   React.useEffect(() => {
-    if (user && !user.perfil_completo && location.pathname !== createPageUrl('CompletarPerfil')) {
+    const perfilCompleto = user?.perfil_completo || 
+                          (user?.full_name && user?.telefone && user?.tipos_conta?.length > 0);
+    
+    if (user && !perfilCompleto && location.pathname !== createPageUrl('CompletarPerfil')) {
       navigate(createPageUrl('CompletarPerfil'));
     }
   }, [user, location, navigate]);
@@ -64,6 +67,7 @@ export default function Layout({ children }) {
   { name: 'Novo', icon: Plus, page: 'NovoPedido' },
   { name: 'Chat', icon: MessageCircle, page: 'Chat' },
   { name: 'Carteira', icon: Wallet, page: 'Carteira' },
+  { name: 'Perfil', icon: User, page: 'PerfilMotorista' },
   ...(user?.tipos_conta?.includes('motorista') ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])];
 
 
