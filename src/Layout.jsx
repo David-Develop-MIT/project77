@@ -83,6 +83,11 @@ export default function Layout({ children }) {
 
   const navItems = modoAtivo === 'motorista' ? navItemsMotorista : navItemsCliente;
 
+  // Itens do menu mobile bottom nav (somente os principais)
+  const navItemsMobileBottom = modoAtivo === 'motorista' 
+    ? navItemsMotorista.filter(item => ['Home', 'Disponíveis', 'Entregas', 'Chat'].includes(item.name))
+    : navItemsCliente;
+
   const isActive = (page) => {
     const pageUrl = createPageUrl(page);
     return location.pathname === pageUrl || location.pathname === pageUrl + '/';
@@ -317,7 +322,7 @@ export default function Layout({ children }) {
       {/* Mobile Bottom Nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-slate-100">
         <div className="flex items-center justify-around h-16 px-4">
-          {navItems.map((item) =>
+          {navItemsMobileBottom.map((item) =>
           <Link key={item.page} to={createPageUrl(item.page)}>
               <motion.div
               whileTap={{ scale: 0.9 }}
