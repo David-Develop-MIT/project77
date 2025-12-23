@@ -8,7 +8,7 @@ import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, MapPin, User, Phone, Calendar, Clock, FileText, 
-  Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2, Navigation, Star
+  Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2, Navigation, Star, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -138,6 +138,51 @@ export default function DetalhePedido() {
   const isCliente = user?.email === pedido?.created_by;
   const isMotorista = user?.motorista_id === pedido?.motorista_id;
   const podeAvaliar = pedido?.status === 'concluido' && !minhaAvaliacao;
+
+  const abrirChatMutation = useMutation({
+    mutationFn: async () => {
+      // Verificar se já existe conversa
+      const conversas = await base44.entities.Conversa.list();
+      let conversa = conversas.find(c => 
+        c.pedido_id === pedidoId && 
+        c.participantes?.includes(user.email)
+      );
+
+      if (!conversa) {
+        // Criar nova conversa
+        const participantes = [pedido.created_by];
+        if (pedido.motorista_id) {
+          const motoristas = await base44.entities.Motorista.list();
+          const motorista = motoristas.find(m => m.id === pedido.motorista_id);
+          if (motorista) {
+            participantes.push(motorista.created_by);
+          }
+        }
+
+        const participantesNomes = {};
+        participantesNomes[pedido.created_by] = pedido.nome_cliente;
+        if (pedido.motorista_nome) {
+          const motoristaEmail = participantes.find(p => p !== pedido.created_by);
+          if (motoristaEmail) {
+            participantesNomes[motoristaEmail] = pedido.motorista_nome;
+          }
+        }
+
+        conversa = await base44.entities.Conversa.create({
+          pedido_id: pedidoId,
+          participantes,
+          participantes_nomes: participantesNomes,
+          tipo: 'pedido',
+          ativa: true
+        });
+      }
+
+      return conversa.id;
+    },
+    onSuccess: (conversaId) => {
+      navigate(`${createPageUrl('Chat')}?conversa=${conversaId}`);
+    }
+  });
   
   let avaliadoEmail = null;
   let avaliadoNome = null;
@@ -472,6 +517,17 @@ export default function DetalhePedido() {
                     Ligar para Cliente
                   </Button>
                 </a>
+                {(isCliente || isMotorista) && pedido.motorista_id && (
+                  <Button
+                    variant="outline"
+                    onClick={() => abrirChatMutation.mutate()}
+                    disabled={abrirChatMutation.isPending}
+                    className="w-full justify-start rounded-xl"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Abrir Chat
+                  </Button>
+                )}
               </CardContent>
             </Card>
 

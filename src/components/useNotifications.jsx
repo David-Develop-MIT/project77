@@ -37,6 +37,54 @@ export function useNotifications() {
     refetchInterval: 30000
   });
 
+  // Monitorar novas mensagens de chat
+  const { data: mensagensNaoLidas = [] } = useQuery({
+    queryKey: ['mensagens-chat-nao-lidas', user?.email],
+    queryFn: async () => {
+      const todas = await base44.entities.Mensagem.list('-created_date', 200);
+      return todas.filter(m => 
+        m.remetente_email !== user?.email && 
+        !m.lida_por?.includes(user?.email)
+      );
+    },
+    enabled: !!user?.email,
+    refetchInterval: 10000
+  });
+
+  // Notificar sobre novas mensagens
+  const previousMensagensRef = useRef(null);
+  useEffect(() => {
+    if (!user?.email || !mensagensNaoLidas || mensagensNaoLidas.length === 0) return;
+
+    if (previousMensagensRef.current === null) {
+      previousMensagensRef.current = mensagensNaoLidas.map(m => m.id);
+      return;
+    }
+
+    const previousIds = new Set(previousMensagensRef.current);
+    const novasMensagens = mensagensNaoLidas.filter(m => !previousIds.has(m.id));
+
+    if (novasMensagens.length > 0) {
+      novasMensagens.forEach(mensagem => {
+        toast.success(
+          `💬 Nova mensagem de ${mensagem.remetente_nome}`,
+          {
+            description: mensagem.tipo === 'texto' 
+              ? mensagem.conteudo.substring(0, 50) 
+              : mensagem.tipo === 'imagem' ? '📷 Imagem' : '📍 Localização',
+            duration: 6000,
+            action: {
+              label: 'Ver',
+              onClick: () => window.location.href = '/Chat'
+            }
+          }
+        );
+      });
+    }
+
+    previousMensagensRef.current = mensagensNaoLidas.map(m => m.id);
+  }, [mensagensNaoLidas, user?.email]);
+
   // Monitorar pedidos em andamento para motoristas
   const { data: meusPedidosMotorista = [] } = useQuery({
     queryKey: ['meus-pedidos-motorista-notif'],

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign, Truck, RefreshCw } from 'lucide-react';
+import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign, Truck, RefreshCw, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -60,6 +60,7 @@ export default function Layout({ children }) {
     { name: 'Home', icon: Home, page: 'Home' },
     { name: 'Pedidos', icon: Package, page: 'MeusPedidos' },
     { name: 'Novo', icon: Plus, page: 'NovoPedido' },
+    { name: 'Chat', icon: MessageCircle, page: 'Chat' },
     ...(user?.tipos_conta?.includes('motorista') ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])
   ];
 
@@ -67,6 +68,7 @@ export default function Layout({ children }) {
     { name: 'Home', icon: Home, page: 'Home' },
     { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
     { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
+    { name: 'Chat', icon: MessageCircle, page: 'Chat' },
     { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
     { name: 'Meus Veículos', icon: Truck, page: 'MeusVeiculos' },
     { name: 'Perfil', icon: User, page: 'PerfilMotorista' }

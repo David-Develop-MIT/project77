@@ -13,6 +13,7 @@ import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
 import PerfilMotorista from './pages/PerfilMotorista';
+import Chat from './pages/Chat';
 import __Layout from './Layout.jsx';
 
 
@@ -32,6 +33,7 @@ export const PAGES = {
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
     "PerfilMotorista": PerfilMotorista,
+    "Chat": Chat,
 }
 
 export const pagesConfig = {
