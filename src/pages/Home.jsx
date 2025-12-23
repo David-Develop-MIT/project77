@@ -11,9 +11,19 @@ import PedidoCard from '@/components/PedidoCard';
 import { servicoConfig } from '@/components/servicoConfig';
 
 export default function Home() {
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
+  const { data: authUser } = useQuery({
+    queryKey: ['authUser'],
     queryFn: () => base44.auth.me()
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser', authUser?.email],
+    queryFn: async () => {
+      if (!authUser?.email) return null;
+      const usuarios = await base44.entities.UsuarioPickup.list();
+      return usuarios.find(u => u.email === authUser.email);
+    },
+    enabled: !!authUser?.email
   });
 
   const { data: pedidos = [], isLoading } = useQuery({

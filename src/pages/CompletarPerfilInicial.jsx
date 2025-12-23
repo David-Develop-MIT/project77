@@ -14,19 +14,19 @@ export default function CompletarPerfilInicial() {
   const [selectedMode, setSelectedMode] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
+  const { data: authUser } = useQuery({
+    queryKey: ['authUser'],
     queryFn: () => base44.auth.me()
   });
 
   const { data: usuarioPickup } = useQuery({
-    queryKey: ['usuarioPickup', user?.email],
+    queryKey: ['usuarioPickup', authUser?.email],
     queryFn: async () => {
-      if (!user?.email) return null;
+      if (!authUser?.email) return null;
       const usuarios = await base44.entities.UsuarioPickup.list();
-      return usuarios.find(u => u.email === user.email);
+      return usuarios.find(u => u.email === authUser.email);
     },
-    enabled: !!user?.email
+    enabled: !!authUser?.email
   });
 
   const handleModeSelect = (mode) => {
@@ -51,21 +51,14 @@ export default function CompletarPerfilInicial() {
       } else {
         // Criar novo UsuarioPickup
         await base44.entities.UsuarioPickup.create({
-          name: user.full_name,
-          email: user.email,
+          name: authUser.full_name,
+          email: authUser.email,
           token_acesso: Math.random().toString(36).substring(2, 15),
           tipos_conta: [selectedMode],
           modo_ativo: selectedMode,
           ativo: true
         });
       }
-
-      // Atualizar user do base44
-      await base44.auth.updateMe({
-        tipos_conta: [selectedMode],
-        modo_ativo: selectedMode,
-        perfil_completo: true
-      });
 
       toast.success('Perfil configurado com sucesso!');
       setTimeout(() => {

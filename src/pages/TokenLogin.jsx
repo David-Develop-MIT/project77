@@ -155,10 +155,7 @@ export default function TokenLogin() {
       }
 
       // Verificar se precisa completar perfil
-      const users = await base44.entities.User.list();
-      const userRecord = users.find(u => u.email === usuario.email);
-      
-      if (!userRecord || !userRecord.perfil_completo) {
+      if (!usuario.tipos_conta || usuario.tipos_conta.length === 0) {
         toast.success('Complete seu perfil para continuar');
         setTimeout(() => navigate(createPageUrl('CompletarPerfilInicial')), 500);
         return;
