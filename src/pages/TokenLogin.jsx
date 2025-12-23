@@ -1,18 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Key, Loader2 } from 'lucide-react';
+import { Mail, Key, Loader2, Fingerprint } from 'lucide-react';
 import { toast } from 'sonner';
+import { base44 } from '@/api/base44Client';
+import { Link, useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 
 export default function TokenLogin() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     emailOuCelular: '',
     tokenAcesso: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+
+  useEffect(() => {
+    // Carregar dados salvos
+    const savedEmail = localStorage.getItem('pickupLogin_email');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, emailOuCelular: savedEmail }));
+    }
+
+    // Verificar disponibilidade de biometria
+    if (window.PublicKeyCredential) {
+      PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+        .then((available) => {
+          setBiometricAvailable(available);
+        });
+    }
+  }, []);
+
+  const handleBiometricLogin = async () => {
+    const savedEmail = localStorage.getItem('pickupLogin_email');
+    const savedCredentialId = localStorage.getItem('pickupLogin_credentialId');
+
+    if (!savedEmail || !savedCredentialId) {
+      toast.error('Configure o login biométrico primeiro');
+      return;
+    }
+
+    try {
+      const challenge = new Uint8Array(32);
+      window.crypto.getRandomValues(challenge);
+
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: challenge,
+          allowCredentials: [{
+            id: Uint8Array.from(atob(savedCredentialId), c => c.charCodeAt(0)),
+            type: 'public-key'
+          }],
+          timeout: 60000,
+          userVerification: 'required'
+        }
+      });
+
+      if (credential) {
+        const savedToken = localStorage.getItem('pickupLogin_token');
+        if (savedToken) {
+          setFormData({ emailOuCelular: savedEmail, tokenAcesso: savedToken });
+          toast.success('Autenticado com biometria!');
+          setTimeout(() => navigate(createPageUrl('Home')), 500);
+        }
+      }
+    } catch (error) {
+      toast.error('Falha na autenticação biométrica');
+      console.error(error);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,13 +89,77 @@ export default function TokenLogin() {
 
     setIsLoading(true);
     
-    // Aqui você pode adicionar a lógica de autenticação
     try {
-      // Simulação de chamada de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('Autenticação realizada com sucesso!');
+      const usuarios = await base44.entities.UsuarioPickup.list();
+      const usuario = usuarios.find(
+        u => u.email_ou_celular === formData.emailOuCelular && u.token_acesso === formData.tokenAcesso
+      );
+
+      if (!usuario) {
+        toast.error('Credenciais inválidas');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!usuario.ativo) {
+        toast.error('Usuário inativo');
+        setIsLoading(false);
+        return;
+      }
+
+      // Atualizar último acesso
+      await base44.entities.UsuarioPickup.update(usuario.id, {
+        ultimo_acesso: new Date().toISOString()
+      });
+
+      // Salvar dados localmente
+      localStorage.setItem('pickupLogin_email', formData.emailOuCelular);
+      localStorage.setItem('pickupLogin_token', formData.tokenAcesso);
+
+      // Configurar biometria se disponível e primeira vez
+      const hasCredential = localStorage.getItem('pickupLogin_credentialId');
+      if (biometricAvailable && !hasCredential) {
+        try {
+          const challenge = new Uint8Array(32);
+          window.crypto.getRandomValues(challenge);
+          const userId = new Uint8Array(16);
+          window.crypto.getRandomValues(userId);
+
+          const credential = await navigator.credentials.create({
+            publicKey: {
+              challenge: challenge,
+              rp: { name: 'Pickup Brasil' },
+              user: {
+                id: userId,
+                name: formData.emailOuCelular,
+                displayName: usuario.nome || formData.emailOuCelular
+              },
+              pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+              timeout: 60000,
+              attestation: 'none',
+              authenticatorSelection: {
+                authenticatorAttachment: 'platform',
+                userVerification: 'required'
+              }
+            }
+          });
+
+          if (credential) {
+            const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+            localStorage.setItem('pickupLogin_credentialId', credentialId);
+            toast.success('Biometria configurada!');
+          }
+        } catch (error) {
+          console.log('Biometria não configurada:', error);
+        }
+      }
+
+      toast.success('Login realizado com sucesso!');
+      setTimeout(() => navigate(createPageUrl('Home')), 500);
+
     } catch (error) {
-      toast.error('Erro ao autenticar. Tente novamente.');
+      toast.error('Erro ao autenticar');
+      console.error(error);
     } finally {
       setIsLoading(false);
     }
@@ -52,7 +176,7 @@ export default function TokenLogin() {
           <div className="w-20 h-20 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Key className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Acesso com Token</h1>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">Identifique-se</h1>
           <p className="text-slate-600">Entre com suas credenciais de acesso</p>
         </div>
 
@@ -109,7 +233,32 @@ export default function TokenLogin() {
                   'Entrar'
                 )}
               </Button>
+
+              {biometricAvailable && localStorage.getItem('pickupLogin_credentialId') && (
+                <Button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  variant="outline"
+                  className="w-full rounded-xl h-12 text-base font-semibold"
+                >
+                  <Fingerprint className="w-5 h-5 mr-2" />
+                  Entrar com Biometria
+                </Button>
+              )}
             </form>
+
+            <div className="mt-4 space-y-2">
+              <Link to={createPageUrl('RecuperarToken')}>
+                <Button variant="link" className="w-full text-sm text-slate-600">
+                  Esqueceu seu token?
+                </Button>
+              </Link>
+              <Link to={createPageUrl('CadastroTokenLogin')}>
+                <Button variant="link" className="w-full text-sm text-emerald-600 font-medium">
+                  Não tem uma conta? Cadastre-se
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
 

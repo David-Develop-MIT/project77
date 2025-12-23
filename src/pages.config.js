@@ -24,6 +24,8 @@ import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
 import TokenLogin from './pages/TokenLogin';
+import CadastroTokenLogin from './pages/CadastroTokenLogin';
+import RecuperarToken from './pages/RecuperarToken';
 import __Layout from './Layout.jsx';
 
 
@@ -54,10 +56,12 @@ export const PAGES = {
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
     "TokenLogin": TokenLogin,
+    "CadastroTokenLogin": CadastroTokenLogin,
+    "RecuperarToken": RecuperarToken,
 }
 
 export const pagesConfig = {
-    mainPage: "TokenLogin",
+    mainPage: "Home",
     Pages: PAGES,
     Layout: __Layout,
 };
