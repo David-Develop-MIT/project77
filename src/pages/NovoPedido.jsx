@@ -61,9 +61,20 @@ export default function NovoPedido() {
   }, [tipoInicial]);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Pedido.create(data),
+    mutationFn: async (data) => {
+      const pedido = await base44.entities.Pedido.create(data);
+      
+      // Tentar alocar automaticamente
+      try {
+        await base44.functions.invoke('alocarPedido', { pedido_id: pedido.id });
+      } catch (error) {
+        console.error('Erro ao alocar pedido:', error);
+      }
+      
+      return pedido;
+    },
     onSuccess: () => {
-      toast.success('Pedido criado com sucesso!');
+      toast.success('Pedido criado! Buscando motorista disponível...');
       navigate(createPageUrl('MeusPedidos'));
     },
     onError: () => {
