@@ -63,6 +63,16 @@ export default function NovoPedido() {
     queryFn: () => base44.entities.TabelaPreco.list()
   });
 
+  const { data: metodosPagamento = [] } = useQuery({
+    queryKey: ['metodos-pagamento', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      const metodos = await base44.entities.MetodoPagamento.list();
+      return metodos.filter(m => m.usuario_email === user.email);
+    },
+    enabled: !!user?.email
+  });
+
   // Preencher dados do usuário automaticamente
   useEffect(() => {
     if (user) {
@@ -84,12 +94,15 @@ export default function NovoPedido() {
     mutationFn: async (data) => {
       const pedido = await base44.entities.Pedido.create(data);
       
-      // Se for cartão de crédito/débito, redirecionar para checkout do Stripe
-      if (data.metodo_pagamento === 'cartao_credito' || data.metodo_pagamento === 'cartao_debito') {
+      // Se for cartão de crédito, processar com cartão salvo
+      if (data.metodo_pagamento === 'cartao_credito') {
+        const cartaoPadrao = metodosPagamento.find(m => m.padrao) || metodosPagamento[0];
+        
         const { data: checkoutData } = await base44.functions.invoke('criarCheckoutStripe', {
           pedido_id: pedido.id,
           valor: data.valor_total,
-          metodo_pagamento: data.metodo_pagamento
+          metodo_pagamento: data.metodo_pagamento,
+          payment_method_id: cartaoPadrao.stripe_payment_method_id
         });
         
         if (checkoutData.checkout_url) {
@@ -98,23 +111,30 @@ export default function NovoPedido() {
         }
       }
       
-      // Para outros métodos (PIX, dinheiro), continuar normalmente
-      // Tentar alocar automaticamente
-      try {
-        await base44.functions.invoke('alocarPedido', { pedido_id: pedido.id });
-      } catch (error) {
-        console.error('Erro ao alocar pedido:', error);
+      // Se for PIX, redirecionar para página de pagamento PIX
+      if (data.metodo_pagamento === 'pix') {
+        const { data: pixData } = await base44.functions.invoke('criarCheckoutStripe', {
+          pedido_id: pedido.id,
+          valor: data.valor_total,
+          metodo_pagamento: 'pix'
+        });
+        
+        // Redirecionar para página de PIX com os dados
+        navigate(createPageUrl('PagamentoPix') + `?pedido_id=${pedido.id}&payment_intent_id=${pixData.payment_intent_id}`);
+        return pedido;
       }
       
       return pedido;
     },
     onSuccess: (pedido) => {
-      if (formData.metodo_pagamento === 'cartao_credito' || formData.metodo_pagamento === 'cartao_debito') {
+      if (formData.metodo_pagamento === 'cartao_credito') {
         // Não mostrar toast, pois será redirecionado
         return;
       }
-      toast.success('Pedido criado! Buscando motorista disponível...');
-      navigate(createPageUrl('MeusPedidos'));
+      if (formData.metodo_pagamento === 'pix') {
+        // Será redirecionado para página PIX
+        return;
+      }
     },
     onError: () => {
       toast.error('Erro ao criar pedido. Tente novamente.');
@@ -223,6 +243,18 @@ export default function NovoPedido() {
       toast.error('Informe o valor do serviço');
       return;
     }
+
+    // Validar se tem cartão cadastrado para cartão de crédito
+    if (formData.metodo_pagamento === 'cartao_credito') {
+      if (!metodosPagamento || metodosPagamento.length === 0) {
+        toast.error('Você precisa cadastrar um cartão de crédito primeiro');
+        setTimeout(() => {
+          navigate(createPageUrl('Carteira') + '?tab=cartoes');
+        }, 1500);
+        return;
+      }
+    }
+
     createMutation.mutate(formData);
   };
 
@@ -608,7 +640,7 @@ export default function NovoPedido() {
                     Método de Pagamento *
                   </Label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {['pix', 'cartao_credito', 'cartao_debito', 'dinheiro'].map((method) => (
+                    {['pix', 'cartao_credito'].map((method) => (
                       <PaymentMethodCard
                         key={method}
                         method={method}

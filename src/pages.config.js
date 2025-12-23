@@ -22,6 +22,7 @@ import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
 import PagamentoSucesso from './pages/PagamentoSucesso';
 import PagamentoCancelado from './pages/PagamentoCancelado';
+import PagamentoPix from './pages/PagamentoPix';
 import __Layout from './Layout.jsx';
 
 
@@ -50,6 +51,7 @@ export const PAGES = {
     "TornarseMotorista": TornarseMotorista,
     "PagamentoSucesso": PagamentoSucesso,
     "PagamentoCancelado": PagamentoCancelado,
+    "PagamentoPix": PagamentoPix,
 }
 
 export const pagesConfig = {
