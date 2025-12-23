@@ -26,8 +26,11 @@ export default function FaturasMotorista() {
 
   const statusConfig = {
     aberta: { label: 'Aberta', color: 'bg-blue-100 text-blue-700' },
-    fechada: { label: 'Fechada', color: 'bg-yellow-100 text-yellow-700' },
-    paga: { label: 'Paga', color: 'bg-green-100 text-green-700' }
+    fechada: { label: 'Aguardando Análise', color: 'bg-yellow-100 text-yellow-700' },
+    aguardando_aprovacao: { label: 'Em Análise', color: 'bg-orange-100 text-orange-700' },
+    aprovada: { label: 'Aprovada', color: 'bg-green-100 text-green-700' },
+    paga: { label: 'Paga', color: 'bg-emerald-100 text-emerald-700' },
+    rejeitada: { label: 'Rejeitada', color: 'bg-red-100 text-red-700' }
   };
 
   if (faturas.length === 0) {

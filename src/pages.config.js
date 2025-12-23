@@ -15,6 +15,7 @@ import TornarseMotorista from './pages/TornarseMotorista';
 import PerfilMotorista from './pages/PerfilMotorista';
 import Chat from './pages/Chat';
 import Carteira from './pages/Carteira';
+import AdminFaturas from './pages/AdminFaturas';
 import __Layout from './Layout.jsx';
 
 
@@ -36,6 +37,7 @@ export const PAGES = {
     "PerfilMotorista": PerfilMotorista,
     "Chat": Chat,
     "Carteira": Carteira,
+    "AdminFaturas": AdminFaturas,
 }
 
 export const pagesConfig = {

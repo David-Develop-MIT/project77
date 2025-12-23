@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import GerenciarCartoes from '@/components/pagamentos/GerenciarCartoes';
 import HistoricoTransacoes from '@/components/pagamentos/HistoricoTransacoes';
 import FaturasMotorista from '@/components/pagamentos/FaturasMotorista';
+import DadosBancarios from '@/components/pagamentos/DadosBancarios';
 
 export default function Carteira() {
   const { data: user } = useQuery({
@@ -46,7 +47,7 @@ export default function Carteira() {
         </motion.div>
 
         <Tabs defaultValue="metodos" className="space-y-6">
-          <TabsList className={`grid w-full ${isMotorista ? 'grid-cols-3' : 'grid-cols-2'} rounded-xl`}>
+          <TabsList className={`grid w-full ${isMotorista ? 'grid-cols-4' : 'grid-cols-2'} rounded-xl`}>
             <TabsTrigger value="metodos" className="rounded-lg">
               <Wallet className="w-4 h-4 mr-2" />
               Métodos
@@ -56,10 +57,16 @@ export default function Carteira() {
               Transações
             </TabsTrigger>
             {isMotorista && (
-              <TabsTrigger value="faturas" className="rounded-lg">
-                <DollarSign className="w-4 h-4 mr-2" />
-                Faturas
-              </TabsTrigger>
+              <>
+                <TabsTrigger value="faturas" className="rounded-lg">
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  Faturas
+                </TabsTrigger>
+                <TabsTrigger value="bancarios" className="rounded-lg">
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  Dados Bancários
+                </TabsTrigger>
+              </>
             )}
           </TabsList>
 
@@ -72,9 +79,14 @@ export default function Carteira() {
           </TabsContent>
 
           {isMotorista && (
-            <TabsContent value="faturas">
-              <FaturasMotorista />
-            </TabsContent>
+            <>
+              <TabsContent value="faturas">
+                <FaturasMotorista />
+              </TabsContent>
+              <TabsContent value="bancarios">
+                <DadosBancarios />
+              </TabsContent>
+            </>
           )}
         </Tabs>
       </div>
