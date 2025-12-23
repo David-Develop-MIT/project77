@@ -1,8 +1,10 @@
 import AdminBoost from './pages/AdminBoost';
 import AdminFaturas from './pages/AdminFaturas';
+import CadastroTokenLogin from './pages/CadastroTokenLogin';
 import Carteira from './pages/Carteira';
 import Chat from './pages/Chat';
 import CompletarPerfil from './pages/CompletarPerfil';
+import CompletarPerfilInicial from './pages/CompletarPerfilInicial';
 import DetalheMotorista from './pages/DetalheMotorista';
 import DetalhePedido from './pages/DetalhePedido';
 import EscolherPerfil from './pages/EscolherPerfil';
@@ -21,21 +23,21 @@ import PagamentoSucesso from './pages/PagamentoSucesso';
 import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import PerfilCliente from './pages/PerfilCliente';
 import PerfilMotorista from './pages/PerfilMotorista';
-import TabelaPrecos from './pages/TabelaPrecos';
-import TornarseMotorista from './pages/TornarseMotorista';
-import TokenLogin from './pages/TokenLogin';
-import CadastroTokenLogin from './pages/CadastroTokenLogin';
 import RecuperarToken from './pages/RecuperarToken';
-import CompletarPerfilInicial from './pages/CompletarPerfilInicial';
+import TabelaPrecos from './pages/TabelaPrecos';
+import TokenLogin from './pages/TokenLogin';
+import TornarseMotorista from './pages/TornarseMotorista';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AdminBoost": AdminBoost,
     "AdminFaturas": AdminFaturas,
+    "CadastroTokenLogin": CadastroTokenLogin,
     "Carteira": Carteira,
     "Chat": Chat,
     "CompletarPerfil": CompletarPerfil,
+    "CompletarPerfilInicial": CompletarPerfilInicial,
     "DetalheMotorista": DetalheMotorista,
     "DetalhePedido": DetalhePedido,
     "EscolherPerfil": EscolherPerfil,
@@ -54,12 +56,10 @@ export const PAGES = {
     "PedidosDisponiveis": PedidosDisponiveis,
     "PerfilCliente": PerfilCliente,
     "PerfilMotorista": PerfilMotorista,
-    "TabelaPrecos": TabelaPrecos,
-    "TornarseMotorista": TornarseMotorista,
-    "TokenLogin": TokenLogin,
-    "CadastroTokenLogin": CadastroTokenLogin,
     "RecuperarToken": RecuperarToken,
-    "CompletarPerfilInicial": CompletarPerfilInicial,
+    "TabelaPrecos": TabelaPrecos,
+    "TokenLogin": TokenLogin,
+    "TornarseMotorista": TornarseMotorista,
 }
 
 export const pagesConfig = {

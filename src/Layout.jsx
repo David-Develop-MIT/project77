@@ -23,7 +23,7 @@ export default function Layout({ children }) {
   const queryClient = useQueryClient();
 
   // Sistema de notificações em tempo real
-  const { totalNaoLidas, hasNewNotifications } = useNotifications();
+  const { totalNaoLidas, hasNewNotifications, NotificationSound } = useNotifications();
 
   const { data: authUser } = useQuery({
     queryKey: ['authUser'],
@@ -371,6 +371,9 @@ export default function Layout({ children }) {
 
       {/* Atualização de Localização em Background (apenas para motoristas) */}
       {modoAtivo === 'motorista' && <AtualizarLocalizacao />}
+
+      {/* Som de Notificação */}
+      <NotificationSound />
     </div>);
 
 }
