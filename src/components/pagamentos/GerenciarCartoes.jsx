@@ -18,6 +18,7 @@ export default function GerenciarCartoes() {
     validade: '',
     cvv: ''
   });
+  const [bandeiraDetectada, setBandeiraDetectada] = useState('');
   const queryClient = useQueryClient();
 
   const { data: user } = useQuery({
@@ -86,8 +87,37 @@ export default function GerenciarCartoes() {
     const limpo = numero.replace(/\s/g, '');
     if (limpo.startsWith('4')) return 'Visa';
     if (limpo.startsWith('5')) return 'Mastercard';
+    if (limpo.startsWith('37') || limpo.startsWith('34')) return 'Amex';
     if (limpo.startsWith('6')) return 'Elo';
-    return 'Desconhecida';
+    return '';
+  };
+
+  const handleNumeroChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    
+    if (value.length > 16) value = value.slice(0, 16);
+    
+    // Aplicar máscara: 0000 0000 0000 0000
+    let formatted = value.match(/.{1,4}/g)?.join(' ') || value;
+    
+    setFormData({...formData, numero: formatted});
+    
+    // Detectar bandeira em tempo real
+    const bandeira = detectarBandeira(value);
+    setBandeiraDetectada(bandeira);
+  };
+
+  const handleValidadeChange = (e) => {
+    let value = e.target.value.replace(/\D/g, '');
+    
+    if (value.length > 4) value = value.slice(0, 4);
+    
+    // Aplicar máscara: MM/AA
+    if (value.length >= 2) {
+      value = value.slice(0, 2) + '/' + value.slice(2);
+    }
+    
+    setFormData({...formData, validade: value});
   };
 
   const handleSubmit = (e) => {
@@ -96,6 +126,14 @@ export default function GerenciarCartoes() {
       toast.error('Preencha todos os campos');
       return;
     }
+    
+    // Validar validade
+    const [mes, ano] = formData.validade.split('/');
+    if (!mes || !ano || parseInt(mes) > 12 || parseInt(mes) < 1) {
+      toast.error('Validade inválida');
+      return;
+    }
+    
     adicionarMutation.mutate(formData);
   };
 
@@ -129,13 +167,22 @@ export default function GerenciarCartoes() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <Label>Número do Cartão</Label>
-                    <Input
-                      value={formData.numero}
-                      onChange={(e) => setFormData({...formData, numero: e.target.value})}
-                      placeholder="0000 0000 0000 0000"
-                      maxLength={19}
-                      className="rounded-xl"
-                    />
+                    <div className="relative">
+                      <Input
+                        value={formData.numero}
+                        onChange={handleNumeroChange}
+                        placeholder="0000 0000 0000 0000"
+                        maxLength={19}
+                        className="rounded-xl pr-20"
+                      />
+                      {bandeiraDetectada && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                          <Badge className="bg-blue-100 text-blue-700 text-xs">
+                            {bandeiraDetectada}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <Label>Nome do Titular</Label>
@@ -151,7 +198,7 @@ export default function GerenciarCartoes() {
                       <Label>Validade</Label>
                       <Input
                         value={formData.validade}
-                        onChange={(e) => setFormData({...formData, validade: e.target.value})}
+                        onChange={handleValidadeChange}
                         placeholder="MM/AA"
                         maxLength={5}
                         className="rounded-xl"
