@@ -21,7 +21,7 @@ export default function Layout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  
+
   // Sistema de notificações em tempo real
   const { totalNaoLidas, hasNewNotifications } = useNotifications();
 
@@ -59,23 +59,23 @@ export default function Layout({ children }) {
   };
 
   const navItemsCliente = [
-    { name: 'Home', icon: Home, page: 'Home' },
-    { name: 'Pedidos', icon: Package, page: 'MeusPedidos' },
-    { name: 'Novo', icon: Plus, page: 'NovoPedido' },
-    { name: 'Chat', icon: MessageCircle, page: 'Chat' },
-    { name: 'Carteira', icon: Wallet, page: 'Carteira' },
-    ...(user?.tipos_conta?.includes('motorista') ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])
-  ];
+  { name: 'Home', icon: Home, page: 'Home' },
+  { name: 'Pedidos', icon: Package, page: 'MeusPedidos' },
+  { name: 'Novo', icon: Plus, page: 'NovoPedido' },
+  { name: 'Chat', icon: MessageCircle, page: 'Chat' },
+  { name: 'Carteira', icon: Wallet, page: 'Carteira' },
+  ...(user?.tipos_conta?.includes('motorista') ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])];
+
 
   const navItemsMotorista = [
-    { name: 'Home', icon: Home, page: 'Home' },
-    { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
-    { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
-    { name: 'Chat', icon: MessageCircle, page: 'Chat' },
-    { name: 'Carteira', icon: Wallet, page: 'Carteira' },
-    { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
-    { name: 'Perfil', icon: User, page: 'PerfilMotorista' }
-  ];
+  { name: 'Home', icon: Home, page: 'Home' },
+  { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
+  { name: 'Minhas Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
+  { name: 'Chat', icon: MessageCircle, page: 'Chat' },
+  { name: 'Carteira', icon: Wallet, page: 'Carteira' },
+  { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
+  { name: 'Perfil', icon: User, page: 'PerfilMotorista' }];
+
 
   const navItems = modoAtivo === 'motorista' ? navItemsMotorista : navItemsCliente;
 
@@ -96,54 +96,54 @@ export default function Layout({ children }) {
             <span className="font-bold text-slate-800">Pickup Brasil</span>
           </Link>
           <div className="flex items-center gap-2">
-            <NotificationBell 
+            <NotificationBell
               count={totalNaoLidas}
               hasNew={hasNewNotifications}
-              onClick={() => setNotificationPanelOpen(true)}
-            />
-            <Button 
-              variant="ghost" 
+              onClick={() => setNotificationPanelOpen(true)} />
+            
+            <Button
+              variant="ghost"
               size="icon"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="rounded-xl"
-            >
+              className="rounded-xl">
+              
               {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
           </div>
         </div>
         
         <AnimatePresence>
-          {menuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-white border-b border-slate-100"
-            >
+          {menuOpen &&
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-white border-b border-slate-100">
+            
               <nav className="p-4 space-y-2">
-                {navItems.map(item => (
-                  <Link
-                    key={item.page}
-                    to={createPageUrl(item.page)}
-                    onClick={() => setMenuOpen(false)}
-                  >
+                {navItems.map((item) =>
+              <Link
+                key={item.page}
+                to={createPageUrl(item.page)}
+                onClick={() => setMenuOpen(false)}>
+                
                     <Button
-                      variant={isActive(item.page) ? "default" : "ghost"}
-                      className={`w-full justify-start rounded-xl ${
-                        isActive(item.page) 
-                          ? 'bg-orange-500 hover:bg-orange-600 text-white' 
-                          : 'text-slate-600'
-                      }`}
-                    >
+                  variant={isActive(item.page) ? "default" : "ghost"}
+                  className={`w-full justify-start rounded-xl ${
+                  isActive(item.page) ?
+                  'bg-orange-500 hover:bg-orange-600 text-white' :
+                  'text-slate-600'}`
+                  }>
+                  
                       <item.icon className="w-5 h-5 mr-3" />
                       {item.name}
                     </Button>
                   </Link>
-                ))}
+              )}
                 
                 <div className="pt-2 border-t border-slate-100">
-                  {user && (
-                    <div className="px-3 py-2 mb-2 bg-slate-50 rounded-xl">
+                  {user &&
+                <div className="px-3 py-2 mb-2 bg-slate-50 rounded-xl">
                       <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-slate-400" />
@@ -156,55 +156,55 @@ export default function Layout({ children }) {
                         </Badge>
                       </div>
                       <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                      {modoAtivo === 'motorista' && user.avaliacao_media_motorista && (
-                        <div className="mt-2 pt-2 border-t border-slate-200">
-                          <AvaliacaoDisplay 
-                            nota={user.avaliacao_media_motorista}
-                            totalAvaliacoes={user.total_avaliacoes_motorista || 0}
-                            size="sm"
-                          />
+                      {modoAtivo === 'motorista' && user.avaliacao_media_motorista &&
+                  <div className="mt-2 pt-2 border-t border-slate-200">
+                          <AvaliacaoDisplay
+                      nota={user.avaliacao_media_motorista}
+                      totalAvaliacoes={user.total_avaliacoes_motorista || 0}
+                      size="sm" />
+                    
                         </div>
-                      )}
-                      {modoAtivo === 'cliente' && user.avaliacao_media_cliente && (
-                        <div className="mt-2 pt-2 border-t border-slate-200">
-                          <AvaliacaoDisplay 
-                            nota={user.avaliacao_media_cliente}
-                            totalAvaliacoes={user.total_avaliacoes_cliente || 0}
-                            size="sm"
-                          />
+                  }
+                      {modoAtivo === 'cliente' && user.avaliacao_media_cliente &&
+                  <div className="mt-2 pt-2 border-t border-slate-200">
+                          <AvaliacaoDisplay
+                      nota={user.avaliacao_media_cliente}
+                      totalAvaliacoes={user.total_avaliacoes_cliente || 0}
+                      size="sm" />
+                    
                         </div>
-                      )}
+                  }
                     </div>
-                  )}
-                  {temAmbos && (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        alternarModoMutation.mutate(modoAtivo === 'cliente' ? 'motorista' : 'cliente');
-                      }}
-                      className="w-full justify-start rounded-xl mb-2"
-                      disabled={alternarModoMutation.isPending}
-                    >
+                }
+                  {temAmbos &&
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    alternarModoMutation.mutate(modoAtivo === 'cliente' ? 'motorista' : 'cliente');
+                  }}
+                  className="w-full justify-start rounded-xl mb-2"
+                  disabled={alternarModoMutation.isPending}>
+                  
                       <RefreshCw className="w-5 h-5 mr-3" />
                       Modo {modoAtivo === 'cliente' ? 'Motorista' : 'Cliente'}
                     </Button>
-                  )}
+                }
                   <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      handleLogout();
-                    }}
-                    className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl"
-                  >
+                  variant="ghost"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl">
+                  
                     <LogOut className="w-5 h-5 mr-3" />
                     Sair da Conta
                   </Button>
                 </div>
               </nav>
             </motion.div>
-          )}
+          }
         </AnimatePresence>
       </header>
 
@@ -212,39 +212,39 @@ export default function Layout({ children }) {
       <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 bg-white border-r border-slate-100 flex-col p-4 z-50">
         <div className="flex items-center justify-between mb-8 px-2">
           <Link to={createPageUrl('Home')} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+            <div className="bg-emerald-800 rounded-xl w-10 h-10 from-orange-500 to-orange-600 flex items-center justify-center">
               <Package className="w-6 h-6 text-white" />
             </div>
             <span className="font-bold text-xl text-slate-800">Entregas</span>
           </Link>
-          <NotificationBell 
+          <NotificationBell
             count={totalNaoLidas}
             hasNew={hasNewNotifications}
-            onClick={() => setNotificationPanelOpen(true)}
-          />
+            onClick={() => setNotificationPanelOpen(true)} />
+          
         </div>
 
         <nav className="flex-1 space-y-2">
-          {navItems.map(item => (
-            <Link key={item.page} to={createPageUrl(item.page)}>
+          {navItems.map((item) =>
+          <Link key={item.page} to={createPageUrl(item.page)}>
               <Button
-                variant={isActive(item.page) ? "default" : "ghost"}
-                className={`w-full justify-start rounded-xl h-11 ${
-                  isActive(item.page) 
-                    ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25' 
-                    : 'text-slate-600 hover:bg-slate-100'
-                }`}
-              >
+              variant={isActive(item.page) ? "default" : "ghost"}
+              className={`w-full justify-start rounded-xl h-11 ${
+              isActive(item.page) ?
+              'bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/25' :
+              'text-slate-600 hover:bg-slate-100'}`
+              }>
+              
                 <item.icon className="w-5 h-5 mr-3" />
                 {item.name}
               </Button>
             </Link>
-          ))}
+          )}
         </nav>
 
         <div className="pt-4 border-t border-slate-100 space-y-3">
-          {user && (
-            <div className="px-3 py-2 bg-slate-50 rounded-xl">
+          {user &&
+          <div className="px-3 py-2 bg-slate-50 rounded-xl">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <User className="w-4 h-4 text-slate-400" />
@@ -257,42 +257,42 @@ export default function Layout({ children }) {
                 </Badge>
               </div>
               <p className="text-xs text-slate-500 truncate">{user.email}</p>
-              {modoAtivo === 'motorista' && user.avaliacao_media_motorista && (
-                <div className="mt-2 pt-2 border-t border-slate-200">
-                  <AvaliacaoDisplay 
-                    nota={user.avaliacao_media_motorista}
-                    totalAvaliacoes={user.total_avaliacoes_motorista || 0}
-                    size="sm"
-                  />
+              {modoAtivo === 'motorista' && user.avaliacao_media_motorista &&
+            <div className="mt-2 pt-2 border-t border-slate-200">
+                  <AvaliacaoDisplay
+                nota={user.avaliacao_media_motorista}
+                totalAvaliacoes={user.total_avaliacoes_motorista || 0}
+                size="sm" />
+              
                 </div>
-              )}
-              {modoAtivo === 'cliente' && user.avaliacao_media_cliente && (
-                <div className="mt-2 pt-2 border-t border-slate-200">
-                  <AvaliacaoDisplay 
-                    nota={user.avaliacao_media_cliente}
-                    totalAvaliacoes={user.total_avaliacoes_cliente || 0}
-                    size="sm"
-                  />
+            }
+              {modoAtivo === 'cliente' && user.avaliacao_media_cliente &&
+            <div className="mt-2 pt-2 border-t border-slate-200">
+                  <AvaliacaoDisplay
+                nota={user.avaliacao_media_cliente}
+                totalAvaliacoes={user.total_avaliacoes_cliente || 0}
+                size="sm" />
+              
                 </div>
-              )}
+            }
             </div>
-          )}
-          {temAmbos && (
-            <Button
-              variant="outline"
-              onClick={() => alternarModoMutation.mutate(modoAtivo === 'cliente' ? 'motorista' : 'cliente')}
-              className="w-full justify-start rounded-xl"
-              disabled={alternarModoMutation.isPending}
-            >
+          }
+          {temAmbos &&
+          <Button
+            variant="outline"
+            onClick={() => alternarModoMutation.mutate(modoAtivo === 'cliente' ? 'motorista' : 'cliente')}
+            className="w-full justify-start rounded-xl"
+            disabled={alternarModoMutation.isPending}>
+            
               <RefreshCw className="w-4 h-4 mr-3" />
               Alternar para {modoAtivo === 'cliente' ? 'Motorista' : 'Cliente'}
             </Button>
-          )}
+          }
           <Button
             variant="ghost"
             onClick={handleLogout}
-            className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl"
-          >
+            className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-xl">
+            
             <LogOut className="w-4 h-4 mr-3" />
             Sair da Conta
           </Button>
@@ -305,19 +305,19 @@ export default function Layout({ children }) {
       {/* Mobile Bottom Nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-slate-100">
         <div className="flex items-center justify-around h-16 px-4">
-          {navItems.map(item => (
-            <Link key={item.page} to={createPageUrl(item.page)}>
+          {navItems.map((item) =>
+          <Link key={item.page} to={createPageUrl(item.page)}>
               <motion.div
-                whileTap={{ scale: 0.9 }}
-                className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${
-                  isActive(item.page) ? 'text-orange-500' : 'text-slate-400'
-                }`}
-              >
+              whileTap={{ scale: 0.9 }}
+              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${
+              isActive(item.page) ? 'text-orange-500' : 'text-slate-400'}`
+              }>
+              
                 <item.icon className="w-5 h-5" />
                 <span className="text-xs font-medium">{item.name}</span>
               </motion.div>
             </Link>
-          ))}
+          )}
         </div>
       </nav>
 
@@ -327,16 +327,16 @@ export default function Layout({ children }) {
       </main>
 
       {/* Notification Panel */}
-      <NotificationPanel 
+      <NotificationPanel
         isOpen={notificationPanelOpen}
-        onClose={() => setNotificationPanelOpen(false)}
-      />
+        onClose={() => setNotificationPanelOpen(false)} />
+      
 
       {/* Notificação de Alocação Automática (apenas para motoristas) */}
       {modoAtivo === 'motorista' && <NotificacaoAlocacao />}
 
       {/* Atualização de Localização em Background (apenas para motoristas) */}
       {modoAtivo === 'motorista' && <AtualizarLocalizacao />}
-    </div>
-  );
+    </div>);
+
 }
