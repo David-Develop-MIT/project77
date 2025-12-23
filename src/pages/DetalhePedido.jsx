@@ -10,6 +10,7 @@ import {
   ArrowLeft, MapPin, User, Phone, Calendar, Clock, FileText, 
   Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2, Navigation, Star, MessageCircle
 } from 'lucide-react';
+import MapaRota from '@/components/MapaRota';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -366,8 +367,41 @@ export default function DetalhePedido() {
                     <p className="text-amber-800">{pedido.observacoes}</p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
+                </CardContent>
+                </Card>
+
+                {/* Mapa com Rota e Localização do Motorista */}
+                {(pedido.latitude_origem && pedido.longitude_origem) && (
+                <Card className="border-slate-100 rounded-2xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Navigation className="w-5 h-5 text-blue-500" />
+                    Mapa da Rota
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MapaRota
+                    origem={{
+                      latitude: pedido.latitude_origem,
+                      longitude: pedido.longitude_origem,
+                      endereco: pedido.endereco_origem
+                    }}
+                    destino={pedido.endereco_destino ? {
+                      latitude: pedido.latitude_destino,
+                      longitude: pedido.longitude_destino,
+                      endereco: pedido.endereco_destino
+                    } : null}
+                    motoristaId={pedido.motorista_id}
+                  />
+                  {pedido.motorista_id && (
+                    <p className="text-xs text-slate-500 mt-3 flex items-center gap-1">
+                      <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                      Localização do motorista atualizada em tempo real
+                    </p>
+                  )}
+                </CardContent>
+                </Card>
+                )}
 
             {/* Client Info */}
             <Card className="border-slate-100 rounded-2xl">

@@ -2,9 +2,11 @@ import AdminBoost from './pages/AdminBoost';
 import AdminFaturas from './pages/AdminFaturas';
 import Carteira from './pages/Carteira';
 import Chat from './pages/Chat';
+import CompletarPerfil from './pages/CompletarPerfil';
 import DetalheMotorista from './pages/DetalheMotorista';
 import DetalhePedido from './pages/DetalhePedido';
 import EscolherPerfil from './pages/EscolherPerfil';
+import FazerOferta from './pages/FazerOferta';
 import HistoricoEntregas from './pages/HistoricoEntregas';
 import Home from './pages/Home';
 import MeusPedidos from './pages/MeusPedidos';
@@ -17,8 +19,6 @@ import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
-import CompletarPerfil from './pages/CompletarPerfil';
-import FazerOferta from './pages/FazerOferta';
 import __Layout from './Layout.jsx';
 
 
@@ -27,9 +27,11 @@ export const PAGES = {
     "AdminFaturas": AdminFaturas,
     "Carteira": Carteira,
     "Chat": Chat,
+    "CompletarPerfil": CompletarPerfil,
     "DetalheMotorista": DetalheMotorista,
     "DetalhePedido": DetalhePedido,
     "EscolherPerfil": EscolherPerfil,
+    "FazerOferta": FazerOferta,
     "HistoricoEntregas": HistoricoEntregas,
     "Home": Home,
     "MeusPedidos": MeusPedidos,
@@ -42,8 +44,6 @@ export const PAGES = {
     "PerfilMotorista": PerfilMotorista,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
-    "CompletarPerfil": CompletarPerfil,
-    "FazerOferta": FazerOferta,
 }
 
 export const pagesConfig = {
