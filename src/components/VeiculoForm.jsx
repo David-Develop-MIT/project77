@@ -27,18 +27,18 @@ const modalidadesServico = [
 ];
 
 export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) {
-  const [formData, setFormData] = useState(veiculo || {
-    tipo: 'carro',
-    modalidades: [],
-    nome_veiculo: '',
-    placa: '',
-    modelo: '',
-    cor: '',
-    ano: '',
-    nome_motorista: '',
-    tem_ajudante: false,
-    valor_por_km: '',
-    foto_url: ''
+  const [formData, setFormData] = useState({
+    tipo: veiculo?.tipo || 'carro',
+    modalidades: veiculo?.modalidades || [],
+    nome_veiculo: veiculo?.nome_veiculo || '',
+    placa: veiculo?.placa || '',
+    modelo: veiculo?.modelo || '',
+    cor: veiculo?.cor || '',
+    ano: veiculo?.ano || '',
+    nome_motorista: veiculo?.nome_motorista || '',
+    tem_ajudante: veiculo?.tem_ajudante || false,
+    valor_por_km: veiculo?.valor_por_km || '',
+    foto_url: veiculo?.foto_url || ''
   });
   const [uploadingFoto, setUploadingFoto] = useState(false);
 
