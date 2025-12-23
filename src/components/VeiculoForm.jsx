@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bike, Car, Truck, Package, Upload, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -16,13 +17,27 @@ const veiculoTipos = [
   { value: 'caminhao', label: 'Caminhão', icon: Package }
 ];
 
+const modalidadesServico = [
+  { value: 'motoboy', label: '🏍️ Motoboy' },
+  { value: 'carreto', label: '🚗 Carreto' },
+  { value: 'mudanca', label: '📦 Mudança' },
+  { value: 'entulho', label: '🏗️ Entulho' },
+  { value: 'comida', label: '🍔 Comida' },
+  { value: 'frete', label: '🚚 Frete' }
+];
+
 export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) {
   const [formData, setFormData] = useState(veiculo || {
     tipo: 'carro',
+    modalidades: [],
+    nome_veiculo: '',
     placa: '',
     modelo: '',
     cor: '',
     ano: '',
+    nome_motorista: '',
+    tem_ajudante: false,
+    valor_por_km: '',
     foto_url: ''
   });
   const [uploadingFoto, setUploadingFoto] = useState(false);
@@ -52,6 +67,15 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
     }
   };
 
+  const toggleModalidade = (modalidade) => {
+    setFormData(prev => {
+      const modalidades = prev.modalidades.includes(modalidade)
+        ? prev.modalidades.filter(m => m !== modalidade)
+        : [...prev.modalidades, modalidade];
+      return { ...prev, modalidades };
+    });
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -60,7 +84,20 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
       return;
     }
 
-    onSubmit(formData);
+    if (!formData.modalidades || formData.modalidades.length === 0) {
+      toast.error('Selecione pelo menos uma modalidade');
+      return;
+    }
+
+    if (!formData.valor_por_km || parseFloat(formData.valor_por_km) <= 0) {
+      toast.error('Informe o valor por km');
+      return;
+    }
+
+    onSubmit({
+      ...formData,
+      valor_por_km: parseFloat(formData.valor_por_km)
+    });
   };
 
   return (
@@ -77,6 +114,31 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <Label>Modalidades de Serviço *</Label>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {modalidadesServico.map((modalidade) => (
+                  <div
+                    key={modalidade.value}
+                    onClick={() => toggleModalidade(modalidade.value)}
+                    className={`cursor-pointer rounded-xl border-2 p-3 transition-all ${
+                      formData.modalidades.includes(modalidade.value)
+                        ? 'border-orange-500 bg-orange-50'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        checked={formData.modalidades.includes(modalidade.value)}
+                        onCheckedChange={() => toggleModalidade(modalidade.value)}
+                      />
+                      <span className="text-sm font-medium">{modalidade.label}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div>
               <Label>Tipo de Veículo *</Label>
               <Select
@@ -100,6 +162,16 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
                   })}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div>
+              <Label>Nome do Veículo</Label>
+              <Input
+                value={formData.nome_veiculo}
+                onChange={(e) => handleChange('nome_veiculo', e.target.value)}
+                placeholder="Ex: Minha Moto, Fiat Strada, etc."
+                className="rounded-xl"
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -137,14 +209,49 @@ export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) 
               />
             </div>
 
-            <div>
-              <Label>Cor</Label>
-              <Input
-                value={formData.cor}
-                onChange={(e) => handleChange('cor', e.target.value)}
-                placeholder="Ex: Preto, Branco, Vermelho"
-                className="rounded-xl"
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label>Cor</Label>
+                <Input
+                  value={formData.cor}
+                  onChange={(e) => handleChange('cor', e.target.value)}
+                  placeholder="Ex: Preto, Branco"
+                  className="rounded-xl"
+                />
+              </div>
+              <div>
+                <Label>Nome do Motorista *</Label>
+                <Input
+                  value={formData.nome_motorista}
+                  onChange={(e) => handleChange('nome_motorista', e.target.value)}
+                  placeholder="Nome completo"
+                  className="rounded-xl"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label>Valor por Km (R$) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.valor_por_km}
+                  onChange={(e) => handleChange('valor_por_km', e.target.value)}
+                  placeholder="1.50"
+                  className="rounded-xl"
+                  required
+                />
+              </div>
+              <div className="flex items-center gap-2 pt-6">
+                <Checkbox
+                  checked={formData.tem_ajudante}
+                  onCheckedChange={(checked) => handleChange('tem_ajudante', checked)}
+                />
+                <Label className="cursor-pointer">Trabalha com ajudante</Label>
+              </div>
             </div>
 
             <div>

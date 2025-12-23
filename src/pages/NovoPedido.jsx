@@ -174,21 +174,19 @@ export default function NovoPedido() {
     }
 
     if (!needsDestination || (!formData.latitude_destino || !formData.longitude_destino)) {
-      const tabelaPreco = precos.find(p => p.tipo_servico === formData.tipo_servico && p.ativo);
-      if (tabelaPreco) {
-        setFormData(prev => ({
-          ...prev,
-          distancia_km: 0,
-          tempo_estimado: 'N/A',
-          valor_calculado: tabelaPreco.valor_minimo,
-          valor_total: tabelaPreco.valor_minimo
-        }));
-      }
+      // Para serviços sem destino, valor base padrão
+      const valorBase = 7.00;
+      setFormData(prev => ({
+        ...prev,
+        distancia_km: 0,
+        tempo_estimado: 'N/A',
+        valor_calculado: valorBase,
+        valor_total: valorBase
+      }));
       return;
     }
 
     setCalculando(true);
-    toast.loading('Calculando distância e preço...', { id: 'calc' });
 
     try {
       // Usar OSRM para calcular rota e distância
@@ -198,37 +196,40 @@ export default function NovoPedido() {
       const data = await response.json();
 
       if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
-        toast.error('Não foi possível calcular a rota', { id: 'calc' });
         return;
       }
 
-      const distanciaKm = (data.routes[0].distance / 1000).toFixed(2);
+      const distanciaKm = parseFloat((data.routes[0].distance / 1000).toFixed(2));
       const duracaoMinutos = Math.round(data.routes[0].duration / 60);
       const tempoEstimado = `${duracaoMinutos} min`;
 
-      // Calcular preço
-      const tabelaPreco = precos.find(p => p.tipo_servico === formData.tipo_servico && p.ativo);
-      let valorCalculado = 0;
-
-      if (tabelaPreco) {
-        const kmExcedente = Math.max(0, distanciaKm - (tabelaPreco.km_inicial_incluido || 0));
-        valorCalculado = tabelaPreco.valor_minimo + (kmExcedente * tabelaPreco.valor_por_km);
-      }
+      // Calcular preço com nova fórmula: Base R$ 7 + (Distância × R$ 1,50/km)
+      const valorBase = 7.00;
+      const valorPorKm = 1.50;
+      const valorCalculado = valorBase + (distanciaKm * valorPorKm);
 
       setFormData(prev => ({
         ...prev,
-        distancia_km: parseFloat(distanciaKm),
+        distancia_km: distanciaKm,
         tempo_estimado: tempoEstimado,
         valor_calculado: valorCalculado,
         valor_total: valorCalculado
       }));
-      toast.success('Preço calculado com sucesso!', { id: 'calc' });
     } catch (error) {
-      toast.error('Erro ao calcular preço', { id: 'calc' });
+      console.error('Erro ao calcular preço:', error);
     } finally {
       setCalculando(false);
     }
   };
+
+  // Calcular automaticamente quando origem e destino mudarem
+  useEffect(() => {
+    if (formData.latitude_origem && formData.longitude_origem) {
+      if (!needsDestination || (formData.latitude_destino && formData.longitude_destino)) {
+        calcularPreco();
+      }
+    }
+  }, [formData.latitude_origem, formData.longitude_origem, formData.latitude_destino, formData.longitude_destino]);
 
   const handleSubmit = () => {
     if (!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || !formData.numero_origem) {
@@ -260,11 +261,7 @@ export default function NovoPedido() {
 
   const needsDestination = ['motoboy', 'carreto', 'mudanca', 'comida', 'frete'].includes(formData.tipo_servico);
 
-  // Auto-calcular quando mudar de step 2 para 3
-  const handleContinueToStep3 = async () => {
-    if (!formData.valor_calculado && formData.endereco_origem && formData.numero_origem) {
-      await calcularPreco();
-    }
+  const handleContinueToStep3 = () => {
     setStep(3);
   };
 
@@ -442,41 +439,21 @@ export default function NovoPedido() {
                   </>
                 )}
 
+                {calculando && (
+                  <div className="flex items-center justify-center gap-2 text-blue-600 bg-blue-50 rounded-xl p-3">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Calculando distância e valor...</span>
+                  </div>
+                )}
+
                 <div className="flex justify-end gap-3 pt-4">
-                  <Button 
-                    onClick={calcularPreco}
-                    disabled={!formData.latitude_origem || calculando}
-                    variant="outline"
-                    className="rounded-xl"
-                  >
-                    {calculando ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Calculando...
-                      </>
-                    ) : (
-                      <>
-                        <Navigation className="w-4 h-4 mr-2" />
-                        Calcular Distância
-                      </>
-                    )}
-                  </Button>
                   <Button 
                     onClick={handleContinueToStep3}
                     disabled={!formData.nome_cliente || !formData.telefone_cliente || !formData.endereco_origem || calculando}
                     className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl px-6"
                   >
-                    {calculando ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Calculando...
-                      </>
-                    ) : (
-                      <>
-                        Continuar
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
+                    Continuar
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
               </div>
