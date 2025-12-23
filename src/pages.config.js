@@ -8,7 +8,6 @@ import DetalhePedido from './pages/DetalhePedido';
 import EscolherPerfil from './pages/EscolherPerfil';
 import FazerOferta from './pages/FazerOferta';
 import HistoricoEntregas from './pages/HistoricoEntregas';
-import Home from './pages/Home';
 import MeusPedidos from './pages/MeusPedidos';
 import MeusPedidosMotorista from './pages/MeusPedidosMotorista';
 import MeusVeiculos from './pages/MeusVeiculos';
@@ -23,6 +22,7 @@ import PerfilCliente from './pages/PerfilCliente';
 import PerfilMotorista from './pages/PerfilMotorista';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TornarseMotorista from './pages/TornarseMotorista';
+import Home from './pages/Home';
 import __Layout from './Layout.jsx';
 
 
@@ -37,7 +37,6 @@ export const PAGES = {
     "EscolherPerfil": EscolherPerfil,
     "FazerOferta": FazerOferta,
     "HistoricoEntregas": HistoricoEntregas,
-    "Home": Home,
     "MeusPedidos": MeusPedidos,
     "MeusPedidosMotorista": MeusPedidosMotorista,
     "MeusVeiculos": MeusVeiculos,
@@ -52,6 +51,7 @@ export const PAGES = {
     "PerfilMotorista": PerfilMotorista,
     "TabelaPrecos": TabelaPrecos,
     "TornarseMotorista": TornarseMotorista,
+    "Home": Home,
 }
 
 export const pagesConfig = {

@@ -62,13 +62,14 @@ export default function Layout({ children }) {
   };
 
   const navItemsCliente = [
-  { name: 'Home', icon: Home, page: 'Home' },
-  { name: 'Pedidos', icon: Package, page: 'MeusPedidos' },
-  { name: 'Novo', icon: Plus, page: 'NovoPedido' },
-  { name: 'Chat', icon: MessageCircle, page: 'Chat' },
-  { name: 'Carteira', icon: Wallet, page: 'Carteira' },
-  { name: 'Perfil', icon: User, page: 'PerfilCliente' },
-  ...(user?.tipos_conta?.includes('motorista') ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])];
+    { name: 'Home', icon: Home, page: 'Home' },
+    { name: 'Pedidos', icon: Package, page: 'MeusPedidos' },
+    { name: 'Novo', icon: Plus, page: 'NovoPedido' },
+    { name: 'Chat', icon: MessageCircle, page: 'Chat' },
+    { name: 'Carteira', icon: Wallet, page: 'Carteira' },
+    { name: 'Perfil', icon: User, page: 'PerfilCliente' },
+    ...((user?.tipos_conta && user.tipos_conta.includes('motorista')) ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])
+  ];
 
 
   const navItemsMotorista = [
