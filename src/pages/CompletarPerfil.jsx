@@ -324,7 +324,11 @@ export default function CompletarPerfil() {
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => toggleTipoConta('cliente')}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleTipoConta('cliente');
+                    }}
                     className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
                     formData.tipos_conta.includes('cliente') ?
                     'border-blue-500 bg-blue-50' :
@@ -334,7 +338,10 @@ export default function CompletarPerfil() {
                     <div className="flex items-start gap-3">
                       <Checkbox
                         checked={formData.tipos_conta.includes('cliente')}
-                        onCheckedChange={() => toggleTipoConta('cliente')}
+                        onCheckedChange={(checked) => {
+                          toggleTipoConta('cliente');
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                         className="mt-1" />
 
                       <div className="flex-1">
@@ -352,7 +359,11 @@ export default function CompletarPerfil() {
                   <motion.div
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => toggleTipoConta('motorista')}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleTipoConta('motorista');
+                    }}
                     className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
                     formData.tipos_conta.includes('motorista') ?
                     'border-orange-500 bg-orange-50' :
@@ -362,7 +373,10 @@ export default function CompletarPerfil() {
                     <div className="flex items-start gap-3">
                       <Checkbox
                         checked={formData.tipos_conta.includes('motorista')}
-                        onCheckedChange={() => toggleTipoConta('motorista')}
+                        onCheckedChange={(checked) => {
+                          toggleTipoConta('motorista');
+                        }}
+                        onClick={(e) => e.stopPropagation()}
                         className="mt-1" />
 
                       <div className="flex-1">
