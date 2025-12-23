@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import SugestoesInteligentes from '@/components/chat/SugestoesInteligentes';
 
 export default function JanelaChat({ conversaId }) {
   const [mensagem, setMensagem] = useState('');
@@ -18,9 +19,19 @@ export default function JanelaChat({ conversaId }) {
   const fileInputRef = useRef(null);
   const queryClient = useQueryClient();
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
+  const { data: authUser } = useQuery({
+    queryKey: ['authUser'],
     queryFn: () => base44.auth.me()
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ['currentUser', authUser?.email],
+    queryFn: async () => {
+      if (!authUser?.email) return null;
+      const usuarios = await base44.entities.UsuarioPickup.list();
+      return usuarios.find(u => u.email === authUser.email);
+    },
+    enabled: !!authUser?.email
   });
 
   const { data: conversa } = useQuery({
@@ -30,6 +41,16 @@ export default function JanelaChat({ conversaId }) {
       return conversas.find(c => c.id === conversaId);
     },
     enabled: !!conversaId
+  });
+
+  const { data: pedido } = useQuery({
+    queryKey: ['pedido', conversa?.pedido_id],
+    queryFn: async () => {
+      if (!conversa?.pedido_id) return null;
+      const pedidos = await base44.entities.Pedido.list();
+      return pedidos.find(p => p.id === conversa.pedido_id);
+    },
+    enabled: !!conversa?.pedido_id
   });
 
   const { data: mensagens = [] } = useQuery({
@@ -74,7 +95,7 @@ export default function JanelaChat({ conversaId }) {
       const msg = await base44.entities.Mensagem.create({
         conversa_id: conversaId,
         remetente_email: user.email,
-        remetente_nome: user.full_name || user.email,
+        remetente_nome: user.name || user.email,
         tipo,
         conteudo,
         localizacao,
@@ -258,6 +279,11 @@ export default function JanelaChat({ conversaId }) {
 
       {/* Input */}
       <div className="p-4 border-t border-slate-200 bg-white">
+        <SugestoesInteligentes
+          pedido={pedido}
+          modoAtivo={user?.modo_ativo}
+          onSelectSugestao={(texto) => setMensagem(texto)}
+        />
         <div className="flex items-center gap-2">
           <input
             ref={fileInputRef}
