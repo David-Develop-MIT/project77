@@ -79,11 +79,13 @@ Deno.serve(async (req) => {
         stripe_payment_intent_id: session.id,
       });
 
+      console.log('✅ Sessão criada:', session.id);
       return Response.json({
         checkout_url: session.url,
         session_id: session.id,
       });
     } else if (metodo_pagamento === 'pix') {
+      console.log('🔵 Criando PaymentIntent PIX...');
       // Para PIX, criar PaymentIntent com PIX habilitado
       const paymentIntent = await stripe.paymentIntents.create({
         amount: Math.round(valor * 100),
