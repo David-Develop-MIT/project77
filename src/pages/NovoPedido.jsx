@@ -586,30 +586,7 @@ export default function NovoPedido() {
                   </motion.div>
                 )}
 
-                {/* Valor */}
-                <div className="space-y-2">
-                  <Label className="text-slate-700 flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-slate-400" />
-                    Valor do serviço *
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-medium">
-                      R$
-                    </span>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0,00"
-                      value={formData.valor_total || ''}
-                      onChange={(e) => handleChange('valor_total', parseFloat(e.target.value))}
-                      className="rounded-xl border-slate-200 focus:border-orange-500 focus:ring-orange-500 pl-12 text-lg font-semibold"
-                    />
-                  </div>
-                  <p className="text-xs text-slate-500">
-                    {formData.valor_calculado ? 'Valor calculado automaticamente (pode ser ajustado)' : 'Informe o valor total do serviço'}
-                  </p>
-                </div>
+                {/* Valor oculto - apenas exibido no resumo */}
 
                 {/* Métodos de Pagamento */}
                 <div className="space-y-3">
