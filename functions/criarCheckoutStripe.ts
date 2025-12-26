@@ -41,6 +41,7 @@ Deno.serve(async (req) => {
     const appHost = req.headers.get('origin') || 'http://localhost:5173';
 
     if (metodo_pagamento === 'cartao_credito' || metodo_pagamento === 'cartao_debito') {
+      console.log('💳 Criando sessão Stripe para cartão...');
       // Criar sessão de checkout do Stripe
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
