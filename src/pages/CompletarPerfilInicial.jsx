@@ -45,37 +45,49 @@ export default function CompletarPerfilInicial() {
       return;
     }
 
+    if (!authUser?.email) {
+      toast.error('Erro: usuário não autenticado');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const modoInicial = selectedModes[0];
       
-      if (usuarioPickup) {
+      if (usuarioPickup?.id) {
         // Atualizar UsuarioPickup existente
+        console.log('Atualizando usuário:', usuarioPickup.id);
         await base44.entities.UsuarioPickup.update(usuarioPickup.id, {
           tipos_conta: selectedModes,
-          modo_ativo: modoInicial
+          modo_ativo: modoInicial,
+          perfil_completo: true
         });
+        console.log('Usuário atualizado com sucesso');
       } else {
         // Criar novo UsuarioPickup
+        console.log('Criando novo usuário:', authUser.email);
         await base44.entities.UsuarioPickup.create({
-          name: authUser.full_name,
+          name: authUser.full_name || authUser.email,
           email: authUser.email,
-          token_acesso: Math.random().toString(36).substring(2, 15),
+          token_acesso: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
           tipos_conta: selectedModes,
           modo_ativo: modoInicial,
-          ativo: true
+          ativo: true,
+          perfil_completo: true
         });
+        console.log('Usuário criado com sucesso');
       }
 
       toast.success('Perfil configurado com sucesso!');
-      setTimeout(() => {
-        navigate(createPageUrl('Home'));
-        window.location.reload();
-      }, 500);
+      
+      // Aguardar um pouco antes de redirecionar
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      window.location.href = createPageUrl('Home');
     } catch (error) {
-      toast.error('Erro ao configurar perfil');
-      console.error(error);
+      console.error('Erro completo:', error);
+      toast.error(`Erro ao configurar perfil: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
