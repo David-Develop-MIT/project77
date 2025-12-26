@@ -555,7 +555,7 @@ export default function DetalhePedido() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {pedido.status === 'pendente' && pedido.status_pagamento === 'pendente' && isCliente && (
-                  <Link to={`${createPageUrl('NovoPedido')}?pagar_pedido=${pedido.id}`}>
+                  <Link to={`${createPageUrl('PagarPedido')}?id=${pedido.id}`}>
                     <Button
                       className="w-full justify-start rounded-xl bg-orange-500 hover:bg-orange-600 text-white"
                     >
