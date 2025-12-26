@@ -111,17 +111,25 @@ export default function NovoPedido() {
         }
       }
       
-      // Se for PIX, redirecionar para página de pagamento PIX
+      // Se for PIX, criar checkout e redirecionar
       if (data.metodo_pagamento === 'pix') {
-        const { data: pixData } = await base44.functions.invoke('criarCheckoutStripe', {
-          pedido_id: pedido.id,
-          valor: data.valor_total,
-          metodo_pagamento: 'pix'
-        });
-        
-        // Redirecionar para página de PIX com os dados
-        navigate(createPageUrl('PagamentoPix') + `?pedido_id=${pedido.id}&payment_intent_id=${pixData.payment_intent_id}`);
-        return pedido;
+        try {
+          const response = await base44.functions.invoke('criarCheckoutStripe', {
+            pedido_id: pedido.id,
+            valor: data.valor_total,
+            metodo_pagamento: 'pix'
+          });
+          
+          if (response?.data?.payment_intent_id) {
+            navigate(createPageUrl('PagamentoPix') + `?pedido_id=${pedido.id}&payment_intent_id=${response.data.payment_intent_id}`);
+            return pedido;
+          } else {
+            throw new Error('Dados de pagamento PIX não retornados');
+          }
+        } catch (error) {
+          console.error('Erro ao criar checkout PIX:', error);
+          throw error;
+        }
       }
       
       return pedido;
@@ -136,7 +144,8 @@ export default function NovoPedido() {
         return;
       }
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro completo:', error);
       toast.error('Erro ao criar pedido. Tente novamente.');
     }
   });
