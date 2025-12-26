@@ -23,9 +23,10 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Dados incompletos' }, { status: 400 });
     }
 
-    // Buscar pedido
-    const pedidos = await base44.entities.Pedido.list();
+    // Buscar pedido usando service role para ter acesso completo
+    const pedidos = await base44.asServiceRole.entities.Pedido.list();
     const pedido = pedidos.find(p => p.id === pedido_id);
+    console.log('📋 Pedido encontrado:', pedido?.id);
 
     if (!pedido) {
       return Response.json({ error: 'Pedido não encontrado' }, { status: 404 });
@@ -33,6 +34,7 @@ Deno.serve(async (req) => {
 
     // Verificar se o pedido pertence ao usuário
     if (pedido.created_by !== user.email) {
+      console.error('❌ Pedido não pertence ao usuário');
       return Response.json({ error: 'Não autorizado' }, { status: 403 });
     }
 
