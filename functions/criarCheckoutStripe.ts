@@ -5,14 +5,23 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY'));
 
 Deno.serve(async (req) => {
   try {
+    console.log('🔵 Iniciando criarCheckoutStripe');
+    console.log('Headers:', Object.fromEntries(req.headers.entries()));
+    
     const base44 = createClientFromRequest(req);
+    
+    console.log('🔵 Verificando autenticação...');
     const user = await base44.auth.me();
+    console.log('✅ Usuário autenticado:', user?.email);
 
     if (!user) {
+      console.error('❌ Usuário não autenticado');
       return Response.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
-    const { pedido_id, valor, metodo_pagamento } = await req.json();
+    const body = await req.json();
+    console.log('📦 Body recebido:', body);
+    const { pedido_id, valor, metodo_pagamento } = body;
 
     if (!pedido_id || !valor || !metodo_pagamento) {
       return Response.json({ error: 'Dados incompletos' }, { status: 400 });
