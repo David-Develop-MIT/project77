@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { createPageUrl } from '@/utils';
 import NotificationSound from '@/components/NotificationSound';
+import WebPushNotifications, { showNativeNotification } from '@/components/WebPushNotifications';
 
 const criarNotificacao = async (data) => {
   try {
@@ -39,9 +41,60 @@ export function useNotifications() {
   const isMotorista = modoAtivo === 'motorista';
   const isCliente = modoAtivo === 'cliente';
 
+  // Buscar preferências de notificação do usuário
+  const { data: preferencias } = useQuery({
+    queryKey: ['preferencias-notificacao', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return null;
+      const todas = await base44.entities.PreferenciaNotificacao.list();
+      let pref = todas.find(p => p.usuario_email === user.email);
+      
+      if (!pref) {
+        pref = await base44.entities.PreferenciaNotificacao.create({
+          usuario_email: user.email,
+          novos_pedidos: true,
+          novos_pedidos_push: true,
+          status_pedido: true,
+          status_pedido_push: true,
+          novas_mensagens: true,
+          novas_mensagens_push: false,
+          novas_ofertas: true,
+          novas_ofertas_push: true,
+          avaliacoes: true,
+          avaliacoes_push: false,
+          som_notificacao: true
+        });
+      }
+      
+      return pref;
+    },
+    enabled: !!user?.email
+  });
+
   const triggerSound = () => {
-    setPlaySound(true);
-    setTimeout(() => setPlaySound(false), 100);
+    if (preferencias?.som_notificacao !== false) {
+      setPlaySound(true);
+      setTimeout(() => setPlaySound(false), 100);
+    }
+  };
+
+  const sendPushNotification = (titulo, descricao, acoes = [], url = null) => {
+    if (Notification.permission === 'granted') {
+      const notification = showNativeNotification(titulo, {
+        body: descricao,
+        requireInteraction: false,
+        actions: acoes,
+        data: { url }
+      });
+
+      if (notification && url) {
+        notification.onclick = () => {
+          window.focus();
+          window.location.href = url;
+          notification.close();
+        };
+      }
+    }
   };
 
   // Buscar notificações não lidas - TEMPO REAL
@@ -84,7 +137,7 @@ export function useNotifications() {
     const previousIds = new Set(previousMensagensRef.current);
     const novasMensagens = mensagensNaoLidas.filter(m => !previousIds.has(m.id));
 
-    if (novasMensagens.length > 0) {
+    if (novasMensagens.length > 0 && preferencias?.novas_mensagens) {
       triggerSound();
       novasMensagens.forEach(mensagem => {
         toast.success(
@@ -96,6 +149,16 @@ export function useNotifications() {
             duration: 6000
           }
         );
+
+        // Push notification
+        if (preferencias?.novas_mensagens_push) {
+          sendPushNotification(
+            `💬 ${mensagem.remetente_nome}`,
+            mensagem.tipo === 'texto' ? mensagem.conteudo.substring(0, 100) : 'Nova mensagem',
+            [],
+            createPageUrl('Chat')
+          );
+        }
 
         criarNotificacao({
           usuario_email: user.email,
@@ -149,7 +212,7 @@ export function useNotifications() {
       !previousIds.has(p.id) && !notifiedPedidosRef.current.has(p.id)
     );
 
-    if (novosPedidos.length > 0) {
+    if (novosPedidos.length > 0 && preferencias?.novos_pedidos) {
       triggerSound();
       novosPedidos.forEach(pedido => {
         notifiedPedidosRef.current.add(pedido.id);
@@ -161,6 +224,16 @@ export function useNotifications() {
             duration: 8000
           }
         );
+
+        // Push notification com ação rápida
+        if (preferencias?.novos_pedidos_push) {
+          sendPushNotification(
+            '🚗 Novo Pedido Disponível',
+            `${pedido.tipo_servico} - ${pedido.nome_cliente}`,
+            [],
+            createPageUrl('PedidosDisponiveis')
+          );
+        }
 
         criarNotificacao({
           usuario_email: user.email,
@@ -191,7 +264,7 @@ export function useNotifications() {
     meusPedidos.forEach(pedido => {
       const previousStatus = previousMap.get(pedido.id);
       
-      if (previousStatus && previousStatus !== pedido.status) {
+      if (previousStatus && previousStatus !== pedido.status && preferencias?.status_pedido) {
         triggerSound();
         
         const statusMessages = {
@@ -211,6 +284,16 @@ export function useNotifications() {
               duration: 6000
             }
           );
+
+          // Push notification
+          if (preferencias?.status_pedido_push) {
+            sendPushNotification(
+              `${statusInfo.emoji} ${statusInfo.text}`,
+              `Seu pedido de ${pedido.tipo_servico}`,
+              [],
+              `${createPageUrl('DetalhePedido')}?id=${pedido.id}`
+            );
+          }
 
           criarNotificacao({
             usuario_email: user.email,
@@ -253,13 +336,23 @@ export function useNotifications() {
       !ofertasAnteriorRef.current.some(prevO => prevO.id === o.id)
     );
 
-    if (novasOfertas.length > 0 && ofertasAnteriorRef.current.length > 0) {
+    if (novasOfertas.length > 0 && ofertasAnteriorRef.current.length > 0 && preferencias?.novas_ofertas) {
       triggerSound();
       novasOfertas.forEach(oferta => {
         toast.success(`💰 Nova oferta de ${oferta.motorista_nome}!`, {
           description: `Valor: R$ ${oferta.valor_proposto.toFixed(2)}`,
           duration: 5000
         });
+
+        // Push notification com ação rápida
+        if (preferencias?.novas_ofertas_push) {
+          sendPushNotification(
+            '💰 Nova Oferta Recebida',
+            `${oferta.motorista_nome} - R$ ${oferta.valor_proposto.toFixed(2)}`,
+            [],
+            `${createPageUrl('DetalhePedido')}?id=${oferta.pedido_id}`
+          );
+        }
 
         criarNotificacao({
           usuario_email: user.email,
@@ -296,7 +389,7 @@ export function useNotifications() {
       !avaliacoesAnteriorRef.current.some(prevA => prevA.id === a.id)
     );
 
-    if (novasAvaliacoes.length > 0 && avaliacoesAnteriorRef.current.length > 0) {
+    if (novasAvaliacoes.length > 0 && avaliacoesAnteriorRef.current.length > 0 && preferencias?.avaliacoes) {
       triggerSound();
       novasAvaliacoes.forEach(avaliacao => {
         const estrelas = '⭐'.repeat(avaliacao.nota);
@@ -304,6 +397,16 @@ export function useNotifications() {
           description: `${estrelas} ${avaliacao.nota}/5`,
           duration: 5000
         });
+
+        // Push notification
+        if (preferencias?.avaliacoes_push) {
+          sendPushNotification(
+            '⭐ Nova Avaliação',
+            `Você recebeu ${avaliacao.nota} estrelas`,
+            [],
+            null
+          );
+        }
 
         criarNotificacao({
           usuario_email: user.email,
@@ -326,6 +429,8 @@ export function useNotifications() {
     notificacoesNaoLidas,
     totalNaoLidas: notificacoesNaoLidas.length,
     hasNewNotifications: notificacoesNaoLidas.length > 0,
-    NotificationSound: () => <NotificationSound play={playSound} />
+    preferencias,
+    NotificationSound: () => <NotificationSound play={playSound} />,
+    WebPushComponent: () => <WebPushNotifications user={user} preferencias={preferencias} />
   };
 }

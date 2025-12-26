@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign, Truck, RefreshCw, MessageCircle, Wallet } from 'lucide-react';
+import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign, Truck, RefreshCw, MessageCircle, Wallet, Bell, Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,7 +23,7 @@ export default function Layout({ children }) {
   const queryClient = useQueryClient();
 
   // Sistema de notificações em tempo real
-  const { totalNaoLidas, hasNewNotifications, NotificationSound } = useNotifications();
+  const { totalNaoLidas, hasNewNotifications, NotificationSound, WebPushComponent } = useNotifications();
 
   const { data: authUser } = useQuery({
     queryKey: ['authUser'],
@@ -82,6 +82,7 @@ export default function Layout({ children }) {
     { name: 'Novo', icon: Plus, page: 'NovoPedido' },
     { name: 'Chat', icon: MessageCircle, page: 'Chat' },
     { name: 'Carteira', icon: Wallet, page: 'Carteira' },
+    { name: 'Notificações', icon: Bell, page: 'ConfiguracoesNotificacoes' },
     { name: 'Perfil', icon: User, page: 'PerfilCliente' },
     ...((user?.tipos_conta && user.tipos_conta.includes('motorista')) ? [] : [{ name: 'Ser Motorista', icon: Truck, page: 'TornarseMotorista' }])
   ];
@@ -91,10 +92,12 @@ export default function Layout({ children }) {
   { name: 'Home', icon: Home, page: 'Home' },
   { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
   { name: 'Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
+  { name: 'Rota do Dia', icon: Route, page: 'RotasDia' },
   { name: 'Veículos', icon: Truck, page: 'MeusVeiculos' },
   { name: 'Chat', icon: MessageCircle, page: 'Chat' },
   { name: 'Carteira', icon: Wallet, page: 'Carteira' },
   { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
+  { name: 'Notificações', icon: Bell, page: 'ConfiguracoesNotificacoes' },
   { name: 'Perfil', icon: User, page: 'PerfilMotorista' }];
 
 
@@ -374,6 +377,9 @@ export default function Layout({ children }) {
 
       {/* Som de Notificação */}
       <NotificationSound />
+
+      {/* Web Push Notifications */}
+      <WebPushComponent />
     </div>);
 
 }
