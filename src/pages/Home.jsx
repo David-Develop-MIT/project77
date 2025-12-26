@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import { Plus, Clock, CheckCircle, TrendingUp, Package } from 'lucide-react';
+import { Plus, Clock, CheckCircle, TrendingUp, Package, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import StatsCard from '@/components/StatsCard';
 import PedidoCard from '@/components/PedidoCard';
@@ -50,21 +50,32 @@ export default function Home() {
           className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
 
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">
-              {user?.modo_ativo === 'motorista' ? 'Parceiro Pickup' : 'Cliente Pickup'}
-            </h1>
-            <p className="text-slate-500 mt-1">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-slate-800">
+                {user?.modo_ativo === 'motorista' ? 'Parceiro Pickup' : 'Cliente Pickup'}
+              </h1>
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                user?.modo_ativo === 'motorista' 
+                  ? 'bg-orange-100 text-orange-700' 
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {user?.modo_ativo === 'motorista' ? '🚗 Motorista' : '👤 Cliente'}
+              </span>
+            </div>
+            <p className="text-slate-500">
               Gerencie todos os seus serviços em um só lugar
             </p>
           </div>
-          {user?.modo_ativo === 'cliente' && (
-            <Link to={createPageUrl('NovoPedido')}>
-              <Button className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg shadow-emerald-500/25 rounded-xl px-6">
-                <Plus className="w-5 h-5 mr-2" />
-                Novo Pedido
-              </Button>
-            </Link>
-          )}
+          <div className="flex gap-2">
+            {user?.modo_ativo === 'motorista' && (
+              <Link to={createPageUrl('MeusVeiculos')}>
+                <Button variant="outline" className="rounded-xl">
+                  <Truck className="w-5 h-5 mr-2" />
+                  Meus Veículos
+                </Button>
+              </Link>
+            )}
+          </div>
         </motion.div>
 
         {/* Stats */}
@@ -99,7 +110,7 @@ export default function Home() {
 
         </div>
 
-        {/* Quick Actions - Apenas para clientes */}
+        {/* Quick Actions */}
         {user?.modo_ativo === 'cliente' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -107,7 +118,15 @@ export default function Home() {
             transition={{ delay: 0.2 }}
             className="mb-8">
 
-            <h2 className="text-lg font-semibold text-slate-800 mb-4">Serviços Disponíveis</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-800">Serviços Disponíveis</h2>
+              <Link to={createPageUrl('NovoPedido')}>
+                <Button className="bg-emerald-700 hover:bg-emerald-800 text-white shadow-lg rounded-xl">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Novo Pedido
+                </Button>
+              </Link>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {Object.entries(servicoConfig).map(([key, config]) => {
                 const Icon = config.icon;
@@ -132,6 +151,56 @@ export default function Home() {
                   </Link>);
 
               })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Links Motorista */}
+        {user?.modo_ativo === 'motorista' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8">
+
+            <h2 className="text-lg font-semibold text-slate-800 mb-4">Acesso Rápido</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <Link to={createPageUrl('PedidosDisponiveis')}>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-white rounded-xl p-4 border border-slate-100 hover:shadow-lg transition-all text-center">
+                  <Package className="w-8 h-8 text-orange-500 mx-auto mb-2" />
+                  <p className="font-medium text-slate-700 text-sm">Disponíveis</p>
+                </motion.div>
+              </Link>
+              <Link to={createPageUrl('MeusPedidosMotorista')}>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-white rounded-xl p-4 border border-slate-100 hover:shadow-lg transition-all text-center">
+                  <Truck className="w-8 h-8 text-blue-500 mx-auto mb-2" />
+                  <p className="font-medium text-slate-700 text-sm">Entregas</p>
+                </motion.div>
+              </Link>
+              <Link to={createPageUrl('MeusVeiculos')}>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-white rounded-xl p-4 border border-slate-100 hover:shadow-lg transition-all text-center">
+                  <Truck className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                  <p className="font-medium text-slate-700 text-sm">Veículos</p>
+                </motion.div>
+              </Link>
+              <Link to={createPageUrl('RotasDia')}>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="bg-white rounded-xl p-4 border border-slate-100 hover:shadow-lg transition-all text-center">
+                  <TrendingUp className="w-8 h-8 text-purple-500 mx-auto mb-2" />
+                  <p className="font-medium text-slate-700 text-sm">Rotas</p>
+                </motion.div>
+              </Link>
             </div>
           </motion.div>
         )}
