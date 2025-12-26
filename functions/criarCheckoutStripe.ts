@@ -108,6 +108,7 @@ Deno.serve(async (req) => {
         stripe_payment_intent_id: paymentIntent.id,
       });
 
+      console.log('✅ PaymentIntent PIX criado:', paymentIntent.id);
       return Response.json({
         client_secret: paymentIntent.client_secret,
         payment_intent_id: paymentIntent.id,
@@ -116,7 +117,11 @@ Deno.serve(async (req) => {
 
     return Response.json({ error: 'Método de pagamento inválido' }, { status: 400 });
   } catch (error) {
-    console.error('Erro ao criar checkout:', error);
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error('❌ Erro ao criar checkout:', error);
+    console.error('Stack:', error.stack);
+    return Response.json({ 
+      error: error.message,
+      details: error.stack 
+    }, { status: 500 });
   }
 });
