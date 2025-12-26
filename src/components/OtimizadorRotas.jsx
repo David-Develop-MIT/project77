@@ -268,14 +268,39 @@ Por favor, retorne a ordem otimizada dos pedidos, considerando o trânsito atual
                   {rotaOtimizada.observacoes && (
                     <p className="text-xs text-slate-600 mb-3">{rotaOtimizada.observacoes}</p>
                   )}
-                  <Button
-                    variant="outline"
-                    onClick={() => setMostrarMapa(!mostrarMapa)}
-                    className="w-full rounded-lg"
-                  >
-                    <Map className="w-4 h-4 mr-2" />
-                    {mostrarMapa ? 'Ocultar Mapa' : 'Ver Mapa Interativo'}
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setMostrarMapa(!mostrarMapa)}
+                      className="w-full rounded-lg"
+                    >
+                      <Map className="w-4 h-4 mr-2" />
+                      {mostrarMapa ? 'Ocultar' : 'Ver Mapa'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const pedidosOrdenados = rotaOtimizada.ordem_otimizada.map(item => 
+                          pedidos.find(p => p.id === item.pedido_id)
+                        ).filter(Boolean);
+                        
+                        const waypoints = pedidosOrdenados.map((p, i) => {
+                          const origem = `${p.latitude_origem},${p.longitude_origem}`;
+                          if (p.endereco_destino && p.latitude_destino) {
+                            return `${origem}/${p.latitude_destino},${p.longitude_destino}`;
+                          }
+                          return origem;
+                        }).join('/');
+                        
+                        const googleMapsUrl = `https://www.google.com/maps/dir/${localizacaoAtual ? `${localizacaoAtual.lat},${localizacaoAtual.lng}/` : ''}${waypoints}`;
+                        window.open(googleMapsUrl, '_blank');
+                      }}
+                      className="w-full rounded-lg text-blue-600"
+                    >
+                      <Navigation className="w-4 h-4 mr-2" />
+                      Abrir GPS
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
 

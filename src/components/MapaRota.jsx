@@ -37,32 +37,50 @@ const motoristaIcon = L.divIcon({
 });
 
 // Componente para ajustar o mapa automaticamente
-function MapBounds({ origem, destino, motorista }) {
+function MapBounds({ origem, destino, motorista, pedidosOrdenados, localizacaoAtual }) {
   const map = useMap();
 
   useEffect(() => {
     const bounds = L.latLngBounds([]);
     
-    if (origem?.latitude && origem?.longitude) {
-      bounds.extend([origem.latitude, origem.longitude]);
+    // Se temos pedidos ordenados, incluir todos os pontos
+    if (pedidosOrdenados && pedidosOrdenados.length > 0) {
+      pedidosOrdenados.forEach(pedido => {
+        if (pedido?.latitude_origem && pedido?.longitude_origem) {
+          bounds.extend([pedido.latitude_origem, pedido.longitude_origem]);
+        }
+        if (pedido?.latitude_destino && pedido?.longitude_destino) {
+          bounds.extend([pedido.latitude_destino, pedido.longitude_destino]);
+        }
+      });
+    } else {
+      if (origem?.latitude && origem?.longitude) {
+        bounds.extend([origem.latitude, origem.longitude]);
+      }
+      if (destino?.latitude && destino?.longitude) {
+        bounds.extend([destino.latitude, destino.longitude]);
+      }
     }
-    if (destino?.latitude && destino?.longitude) {
-      bounds.extend([destino.latitude, destino.longitude]);
-    }
+    
     if (motorista?.latitude && motorista?.longitude) {
       bounds.extend([motorista.latitude, motorista.longitude]);
+    }
+    
+    if (localizacaoAtual) {
+      bounds.extend([localizacaoAtual.lat, localizacaoAtual.lng]);
     }
 
     if (bounds.isValid()) {
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
     }
-  }, [map, origem, destino, motorista]);
+  }, [map, origem, destino, motorista, pedidosOrdenados, localizacaoAtual]);
 
   return null;
 }
 
-export default function MapaRota({ origem, destino, motoristaId }) {
+export default function MapaRota({ origem, destino, motoristaId, pedidosOrdenados, localizacaoAtual }) {
   const [rota, setRota] = useState([]);
+  const [rotaCompleta, setRotaCompleta] = useState([]);
 
   // Buscar localização do motorista em tempo real
   const { data: motorista } = useQuery({
@@ -77,9 +95,47 @@ export default function MapaRota({ origem, destino, motoristaId }) {
     refetchInterval: 10000, // Atualizar a cada 10 segundos
   });
 
-  // Buscar rota entre origem e destino
+  // Buscar rota entre múltiplos pontos (rota otimizada) ou entre origem e destino
   useEffect(() => {
     const buscarRota = async () => {
+      // Se temos pedidos ordenados, criar rota com múltiplas paradas
+      if (pedidosOrdenados && pedidosOrdenados.length > 0) {
+        const waypoints = [];
+        
+        // Adicionar localização atual se disponível
+        if (localizacaoAtual) {
+          waypoints.push(`${localizacaoAtual.lng},${localizacaoAtual.lat}`);
+        }
+        
+        // Adicionar todas as origens e destinos na ordem
+        pedidosOrdenados.forEach(pedido => {
+          if (pedido?.latitude_origem && pedido?.longitude_origem) {
+            waypoints.push(`${pedido.longitude_origem},${pedido.latitude_origem}`);
+          }
+          if (pedido?.endereco_destino && pedido?.latitude_destino && pedido?.longitude_destino) {
+            waypoints.push(`${pedido.longitude_destino},${pedido.latitude_destino}`);
+          }
+        });
+
+        if (waypoints.length < 2) return;
+
+        try {
+          const response = await fetch(
+            `https://router.project-osrm.org/route/v1/driving/${waypoints.join(';')}?overview=full&geometries=geojson`
+          );
+          const data = await response.json();
+          
+          if (data.routes && data.routes[0]) {
+            const coordinates = data.routes[0].geometry.coordinates.map(coord => [coord[1], coord[0]]);
+            setRotaCompleta(coordinates);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar rota otimizada:', error);
+        }
+        return;
+      }
+
+      // Rota simples entre origem e destino
       if (!origem?.latitude || !origem?.longitude || !destino?.latitude || !destino?.longitude) {
         return;
       }
@@ -100,7 +156,7 @@ export default function MapaRota({ origem, destino, motoristaId }) {
     };
 
     buscarRota();
-  }, [origem, destino]);
+  }, [origem, destino, pedidosOrdenados, localizacaoAtual]);
 
   if (!origem?.latitude || !origem?.longitude) {
     return (
@@ -132,8 +188,15 @@ export default function MapaRota({ origem, destino, motoristaId }) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {/* Rota traçada */}
-        {rota.length > 0 && (
+        {/* Rota traçada - Simples ou Otimizada */}
+        {rotaCompleta.length > 0 ? (
+          <Polyline
+            positions={rotaCompleta}
+            color="#8b5cf6"
+            weight={5}
+            opacity={0.8}
+          />
+        ) : rota.length > 0 && (
           <Polyline
             positions={rota}
             color="#3b82f6"
@@ -144,23 +207,79 @@ export default function MapaRota({ origem, destino, motoristaId }) {
           />
         )}
 
-        {/* Marcador de origem */}
-        <Marker position={[origem.latitude, origem.longitude]} icon={origemIcon}>
-          <Popup>
-            <div className="p-2">
-              <p className="font-semibold text-emerald-700">🟢 Origem</p>
-              <p className="text-xs text-slate-600 mt-1">{origem.endereco || 'Ponto de partida'}</p>
-            </div>
-          </Popup>
-        </Marker>
+        {/* Marcadores para pedidos ordenados */}
+        {pedidosOrdenados && pedidosOrdenados.length > 0 ? (
+          pedidosOrdenados.map((pedido, index) => {
+            const ordemIcon = L.divIcon({
+              html: `<div style="background: #8b5cf6; width: 36px; height: 36px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(139,92,246,0.4); display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 14px;">${index + 1}</div>`,
+              className: '',
+              iconSize: [36, 36],
+              iconAnchor: [18, 18],
+            });
 
-        {/* Marcador de destino */}
-        {destino?.latitude && destino?.longitude && (
-          <Marker position={[destino.latitude, destino.longitude]} icon={destinoIcon}>
+            return (
+              <React.Fragment key={pedido.id}>
+                {/* Origem do pedido */}
+                {pedido?.latitude_origem && pedido?.longitude_origem && (
+                  <Marker position={[pedido.latitude_origem, pedido.longitude_origem]} icon={ordemIcon}>
+                    <Popup>
+                      <div className="p-2">
+                        <p className="font-semibold text-purple-700">🔸 Parada {index + 1}</p>
+                        <p className="text-xs font-medium text-slate-700 mt-1">{pedido.nome_cliente}</p>
+                        <p className="text-xs text-slate-600 mt-1">{pedido.endereco_origem}</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+                {/* Destino do pedido (se houver) */}
+                {pedido?.endereco_destino && pedido?.latitude_destino && pedido?.longitude_destino && (
+                  <Marker position={[pedido.latitude_destino, pedido.longitude_destino]} icon={destinoIcon}>
+                    <Popup>
+                      <div className="p-2">
+                        <p className="font-semibold text-red-700">📍 Entrega {index + 1}</p>
+                        <p className="text-xs font-medium text-slate-700 mt-1">{pedido.nome_cliente}</p>
+                        <p className="text-xs text-slate-600 mt-1">{pedido.endereco_destino}</p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+              </React.Fragment>
+            );
+          })
+        ) : (
+          <>
+            {/* Marcador de origem simples */}
+            {origem?.latitude && origem?.longitude && (
+              <Marker position={[origem.latitude, origem.longitude]} icon={origemIcon}>
+                <Popup>
+                  <div className="p-2">
+                    <p className="font-semibold text-emerald-700">🟢 Origem</p>
+                    <p className="text-xs text-slate-600 mt-1">{origem.endereco || 'Ponto de partida'}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+
+            {/* Marcador de destino simples */}
+            {destino?.latitude && destino?.longitude && (
+              <Marker position={[destino.latitude, destino.longitude]} icon={destinoIcon}>
+                <Popup>
+                  <div className="p-2">
+                    <p className="font-semibold text-red-700">📍 Destino</p>
+                    <p className="text-xs text-slate-600 mt-1">{destino.endereco || 'Ponto de chegada'}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+          </>
+        )}
+
+        {/* Marcador da localização atual do motorista */}
+        {localizacaoAtual && (
+          <Marker position={[localizacaoAtual.lat, localizacaoAtual.lng]} icon={motoristaIcon}>
             <Popup>
               <div className="p-2">
-                <p className="font-semibold text-red-700">📍 Destino</p>
-                <p className="text-xs text-slate-600 mt-1">{destino.endereco || 'Ponto de chegada'}</p>
+                <p className="font-semibold text-orange-700">📍 Você está aqui</p>
               </div>
             </Popup>
           </Marker>
@@ -186,7 +305,13 @@ export default function MapaRota({ origem, destino, motoristaId }) {
         )}
 
         {/* Ajustar limites do mapa automaticamente */}
-        <MapBounds origem={origem} destino={destino} motorista={motorista} />
+        <MapBounds 
+          origem={origem} 
+          destino={destino} 
+          motorista={motorista}
+          pedidosOrdenados={pedidosOrdenados}
+          localizacaoAtual={localizacaoAtual}
+        />
       </MapContainer>
 
       {/* Legenda */}
