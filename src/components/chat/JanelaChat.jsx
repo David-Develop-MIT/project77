@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Image as ImageIcon, MapPin, Paperclip, Loader2, User } from 'lucide-react';
+import { Send, Image as ImageIcon, MapPin, Paperclip, Loader2, User, MessageCircle, History, MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SugestoesInteligentes from '@/components/chat/SugestoesInteligentes';
+import HistoricoChat from '@/components/chat/HistoricoChat';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function JanelaChat({ conversaId }) {
   const [mensagem, setMensagem] = useState('');
@@ -56,11 +58,12 @@ export default function JanelaChat({ conversaId }) {
   const { data: mensagens = [] } = useQuery({
     queryKey: ['mensagens', conversaId],
     queryFn: async () => {
-      const todas = await base44.entities.Mensagem.list('created_date', 500);
+      const todas = await base44.entities.Mensagem.list('created_date', 1000);
       return todas.filter(m => m.conversa_id === conversaId);
     },
     enabled: !!conversaId,
-    refetchInterval: 5000
+    refetchInterval: 2000, // Polling mais rápido para tempo real
+    staleTime: 0
   });
 
   // Marcar mensagens como lidas
@@ -104,15 +107,29 @@ export default function JanelaChat({ conversaId }) {
 
       // Atualizar última mensagem da conversa
       await base44.entities.Conversa.update(conversaId, {
-        ultima_mensagem: tipo === 'texto' ? conteudo : tipo === 'imagem' ? '📷 Imagem' : '📍 Localização',
+        ultima_mensagem: tipo === 'texto' ? conteudo.substring(0, 50) : tipo === 'imagem' ? '📷 Imagem' : '📍 Localização',
         ultima_mensagem_data: new Date().toISOString()
       });
+
+      // Criar notificação para o outro participante
+      const outroParticipante = conversa.participantes.find(p => p !== user.email);
+      if (outroParticipante) {
+        await base44.entities.Notificacao.create({
+          usuario_email: outroParticipante,
+          tipo: 'mensagem_sistema',
+          titulo: `Nova mensagem de ${user.name || user.email}`,
+          descricao: tipo === 'texto' ? conteudo.substring(0, 100) : tipo === 'imagem' ? '📷 Imagem' : '📍 Localização compartilhada',
+          icone: '💬',
+          cor: '#3b82f6'
+        });
+      }
 
       return msg;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['mensagens', conversaId]);
       queryClient.invalidateQueries(['conversas']);
+      queryClient.invalidateQueries(['notificacoes']);
       setMensagem('');
     }
   });
@@ -203,9 +220,36 @@ export default function JanelaChat({ conversaId }) {
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
           <User className="w-5 h-5 text-white" />
         </div>
-        <div>
+        <div className="flex-1">
           <h3 className="font-semibold text-slate-800">{getOutroParticipante()}</h3>
-          <p className="text-xs text-slate-500">Online</p>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <p className="text-xs text-slate-500">Online</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {pedido && (
+            <div className="text-right mr-2">
+              <p className="text-xs text-slate-500">Pedido #{pedido.id?.slice(-6)}</p>
+              <p className="text-xs font-medium text-slate-700">{pedido.tipo_servico}</p>
+            </div>
+          )}
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-xl">
+                <History className="w-5 h-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl max-h-[80vh]">
+              <DialogHeader>
+                <DialogTitle>Histórico da Conversa</DialogTitle>
+              </DialogHeader>
+              <HistoricoChat 
+                conversaId={conversaId} 
+                outroParticipante={getOutroParticipante()} 
+              />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -241,11 +285,14 @@ export default function JanelaChat({ conversaId }) {
                         </p>
                       )}
                       {msg.tipo === 'imagem' && (
-                        <img 
-                          src={msg.conteudo} 
-                          alt="Imagem" 
-                          className="rounded-lg max-w-full"
-                        />
+                        <div className="space-y-1">
+                          <img 
+                            src={msg.conteudo} 
+                            alt="Imagem" 
+                            className="rounded-lg max-w-full cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => window.open(msg.conteudo, '_blank')}
+                          />
+                        </div>
                       )}
                       {msg.tipo === 'localizacao' && (
                         <a 
@@ -263,11 +310,20 @@ export default function JanelaChat({ conversaId }) {
                           </div>
                         </a>
                       )}
-                      <p className={`text-xs mt-1 ${
-                        isMinha ? 'text-blue-100' : 'text-slate-400'
-                      }`}>
-                        {format(new Date(msg.created_date), 'HH:mm', { locale: ptBR })}
-                      </p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className={`text-xs ${
+                          isMinha ? 'text-blue-100' : 'text-slate-400'
+                        }`}>
+                          {format(new Date(msg.created_date), 'HH:mm', { locale: ptBR })}
+                        </p>
+                        {isMinha && (
+                          <p className={`text-xs ${
+                            msg.lida_por?.length > 1 ? 'text-blue-100' : 'text-blue-200'
+                          }`}>
+                            {msg.lida_por?.length > 1 ? '✓✓' : '✓'}
+                          </p>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 </div>

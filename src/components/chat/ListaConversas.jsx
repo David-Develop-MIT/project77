@@ -28,24 +28,26 @@ export default function ListaConversas({ onSelectConversa, conversaSelecionada }
   const { data: conversas = [] } = useQuery({
     queryKey: ['conversas', user?.email],
     queryFn: async () => {
-      const todas = await base44.entities.Conversa.list('-ultima_mensagem_data', 100);
+      const todas = await base44.entities.Conversa.list('-ultima_mensagem_data', 200);
       return todas.filter(c => c.participantes?.includes(user?.email) && c.ativa);
     },
     enabled: !!user?.email,
-    refetchInterval: 10000
+    refetchInterval: 3000, // Atualização mais rápida
+    staleTime: 0
   });
 
   const { data: mensagens = [] } = useQuery({
     queryKey: ['mensagens-nao-lidas', user?.email],
     queryFn: async () => {
-      const todas = await base44.entities.Mensagem.list('-created_date', 500);
+      const todas = await base44.entities.Mensagem.list('-created_date', 1000);
       return todas.filter(m => 
         m.remetente_email !== user?.email && 
         !m.lida_por?.includes(user?.email)
       );
     },
     enabled: !!user?.email,
-    refetchInterval: 10000
+    refetchInterval: 2000, // Verificação mais frequente de mensagens não lidas
+    staleTime: 0
   });
 
   const getMensagensNaoLidas = (conversaId) => {
