@@ -7,9 +7,9 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowLeft, MapPin, User, Phone, Calendar, Clock, FileText, 
-  Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2, Navigation, Star, MessageCircle
-} from 'lucide-react';
+        ArrowLeft, MapPin, User, Phone, Calendar, Clock, FileText, 
+        Edit2, Trash2, CheckCircle, XCircle, Truck, Loader2, Navigation, Star, MessageCircle, DollarSign
+      } from 'lucide-react';
 import MapaRota from '@/components/MapaRota';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,10 +95,17 @@ export default function DetalhePedido() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Pedido.delete(id),
+    mutationFn: async (id) => {
+      await base44.entities.Pedido.delete(id);
+    },
     onSuccess: () => {
+      queryClient.invalidateQueries(['pedidos']);
       toast.success('Pedido excluído!');
       navigate(createPageUrl('MeusPedidos'));
+    },
+    onError: (error) => {
+      toast.error('Erro ao excluir pedido');
+      console.error(error);
     }
   });
 
@@ -498,55 +505,7 @@ export default function DetalhePedido() {
               </Card>
             )}
 
-            {/* Status Update */}
-            <Card className="border-slate-100 rounded-2xl">
-              <CardHeader>
-                <CardTitle className="text-lg">Atualizar Status</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Select 
-                  value={pedido.status} 
-                  onValueChange={handleStatusChange}
-                  disabled={updateMutation.isPending}
-                >
-                  <SelectTrigger className="rounded-xl">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pendente">
-                      <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-amber-500" />
-                        Pendente
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="confirmado">
-                      <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500" />
-                        Confirmado
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="em_andamento">
-                      <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-violet-500" />
-                        Em Andamento
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="concluido">
-                      <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                        Concluído
-                      </span>
-                    </SelectItem>
-                    <SelectItem value="cancelado">
-                      <span className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-slate-400" />
-                        Cancelado
-                      </span>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
+
 
             {/* Quick Actions */}
             <Card className="border-slate-100 rounded-2xl">
@@ -554,16 +513,6 @@ export default function DetalhePedido() {
                 <CardTitle className="text-lg">Ações Rápidas</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                {pedido.status === 'pendente' && (!pedido.status_pagamento || pedido.status_pagamento === 'pendente') && isCliente && (
-                  <Link to={`${createPageUrl('PagarPedido')}?id=${pedido.id}`}>
-                    <Button
-                      className="w-full justify-start rounded-xl bg-orange-500 hover:bg-orange-600 text-white"
-                    >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Pagar Agora
-                    </Button>
-                  </Link>
-                )}
                 {pedido.status !== 'concluido' && pedido.status !== 'cancelado' && (
                   <>
                     <Button
@@ -586,15 +535,28 @@ export default function DetalhePedido() {
                     </Button>
                   </>
                 )}
-                <a href={`tel:${pedido.telefone_cliente}`}>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start rounded-xl"
-                  >
-                    <Phone className="w-4 h-4 mr-2" />
-                    Ligar para Cliente
-                  </Button>
-                </a>
+                {isMotorista && pedido.status_pagamento === 'pago' && (
+                  <a href={`tel:${pedido.telefone_cliente}`}>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start rounded-xl"
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Ligar para Cliente
+                    </Button>
+                  </a>
+                )}
+                {isCliente && pedido.motorista_id && pedido.status_pagamento === 'pago' && pedido.motorista_nome && (
+                  <a href={`tel:${pedido.telefone_cliente}`}>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start rounded-xl"
+                    >
+                      <Phone className="w-4 h-4 mr-2" />
+                      Ligar para Motorista
+                    </Button>
+                  </a>
+                )}
                 {(isCliente || isMotorista) && pedido.motorista_id && (
                   <Button
                     variant="outline"
@@ -697,6 +659,14 @@ export default function DetalhePedido() {
                          pedido.status_pagamento === 'estornado' ? '✗ Estornado' :
                          '⏱ Pendente'}
                       </span>
+                      {pedido.status_pagamento === 'pendente' && isCliente && (
+                        <Link to={`${createPageUrl('PagarPedido')}?id=${pedido.id}`} className="block mt-3">
+                          <Button className="w-full bg-white text-orange-600 hover:bg-orange-50">
+                            <DollarSign className="w-4 h-4 mr-2" />
+                            Realizar Pagamento
+                          </Button>
+                        </Link>
+                      )}
                     </div>
                   )}
                 </CardContent>
