@@ -606,7 +606,7 @@ export default function NovoPedido() {
                 </div>
 
                 {/* Resumo */}
-                {formData.valor_total > 0 && formData.metodo_pagamento && (
+                {formData.valor_total && formData.metodo_pagamento && (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -614,8 +614,8 @@ export default function NovoPedido() {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-slate-700 font-medium">Total a pagar</span>
-                      <span className="text-2xl font-bold text-orange-600">
-                        R$ {formData.valor_total.toFixed(2)}
+                      <span className="text-3xl font-bold text-orange-600">
+                        R$ {formData.valor_total.toFixed(2).replace('.', ',')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-slate-600">
