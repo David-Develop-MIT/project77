@@ -92,11 +92,15 @@ export default function NovoPedido() {
 
   const createMutation = useMutation({
     mutationFn: async (data) => {
+      console.log('🔵 Criando pedido com dados:', data);
       const pedido = await base44.entities.Pedido.create(data);
+      console.log('✅ Pedido criado:', pedido.id);
       
       // Se for cartão de crédito, processar com cartão salvo
       if (data.metodo_pagamento === 'cartao_credito') {
+        console.log('💳 Processando pagamento com cartão...');
         const cartaoPadrao = metodosPagamento.find(m => m.padrao) || metodosPagamento[0];
+        console.log('Cartão padrão:', cartaoPadrao);
         
         const response = await base44.functions.invoke('criarCheckoutStripe', {
           pedido_id: pedido.id,
@@ -105,26 +109,36 @@ export default function NovoPedido() {
           payment_method_id: cartaoPadrao?.stripe_payment_method_id
         });
         
+        console.log('📦 Resposta do checkout:', response);
+        
         if (response?.data?.checkout_url) {
+          console.log('🔗 Redirecionando para:', response.data.checkout_url);
           window.location.href = response.data.checkout_url;
           return pedido;
         } else {
+          console.error('❌ Resposta sem checkout_url:', response);
           throw new Error('URL de checkout não retornada');
         }
       }
       
       // Se for PIX, criar checkout e redirecionar
       if (data.metodo_pagamento === 'pix') {
+        console.log('🔵 Processando pagamento PIX...');
         const response = await base44.functions.invoke('criarCheckoutStripe', {
           pedido_id: pedido.id,
           valor: data.valor_total,
           metodo_pagamento: 'pix'
         });
         
+        console.log('📦 Resposta do checkout PIX:', response);
+        
         if (response?.data?.payment_intent_id) {
-          navigate(createPageUrl('PagamentoPix') + `?pedido_id=${pedido.id}&payment_intent_id=${response.data.payment_intent_id}`);
+          const url = createPageUrl('PagamentoPix') + `?pedido_id=${pedido.id}&payment_intent_id=${response.data.payment_intent_id}`;
+          console.log('🔗 Navegando para:', url);
+          navigate(url);
           return pedido;
         } else {
+          console.error('❌ Resposta sem payment_intent_id:', response);
           throw new Error('ID de pagamento PIX não retornado');
         }
       }
@@ -132,12 +146,13 @@ export default function NovoPedido() {
       return pedido;
     },
     onSuccess: (pedido) => {
+      console.log('✅ Mutation onSuccess');
       if (formData.metodo_pagamento === 'cartao_credito' || formData.metodo_pagamento === 'pix') {
         return;
       }
     },
     onError: (error) => {
-      console.error('Erro completo:', error);
+      console.error('❌ Erro na mutation:', error);
       toast.error(error.message || 'Erro ao criar pedido. Tente novamente.');
     }
   });
