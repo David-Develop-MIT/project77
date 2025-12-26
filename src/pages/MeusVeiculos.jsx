@@ -55,10 +55,20 @@ export default function MeusVeiculos() {
   });
 
   const { data: veiculos = [], isLoading } = useQuery({
-    queryKey: ['meus-veiculos'],
+    queryKey: ['meus-veiculos', user?.motorista_id],
     queryFn: async () => {
       const todos = await base44.entities.Veiculo.list('-created_date', 100);
       return todos.filter(v => v.motorista_id === user?.motorista_id);
+    },
+    enabled: !!user?.motorista_id
+  });
+
+  // Buscar histórico de uso dos veículos (pedidos por veículo)
+  const { data: historicoUso = [] } = useQuery({
+    queryKey: ['historico-uso-veiculos', user?.motorista_id],
+    queryFn: async () => {
+      const pedidos = await base44.entities.Pedido.list('-created_date', 500);
+      return pedidos.filter(p => p.motorista_id === user?.motorista_id && p.status === 'concluido');
     },
     enabled: !!user?.motorista_id
   });
@@ -93,7 +103,9 @@ export default function MeusVeiculos() {
   });
 
   const setVeiculoAtivoMutation = useMutation({
-    mutationFn: (veiculoId) => base44.auth.updateMe({ veiculo_ativo_id: veiculoId }),
+    mutationFn: async (veiculoId) => {
+      await base44.entities.UsuarioPickup.update(user.id, { veiculo_ativo_id: veiculoId });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['currentUser']);
       toast.success('Veículo ativo atualizado!');
@@ -231,6 +243,11 @@ export default function MeusVeiculos() {
             {veiculos.map((veiculo, index) => {
               const Icon = veiculoIcons[veiculo.tipo];
               const isAtivo = user.veiculo_ativo_id === veiculo.id;
+              
+              // Calcular estatísticas de uso
+              const pedidosVeiculo = historicoUso.filter(p => p.veiculo_ativo_id === veiculo.id);
+              const totalEntregas = pedidosVeiculo.length;
+              const totalGanhos = pedidosVeiculo.reduce((acc, p) => acc + (p.valor_total || 0), 0);
 
               return (
                 <motion.div
@@ -247,7 +264,9 @@ export default function MeusVeiculos() {
                             <Icon className="w-6 h-6 text-orange-500" />
                           </div>
                           <div>
-                            <h3 className="font-semibold text-slate-800">{veiculoLabels[veiculo.tipo]}</h3>
+                            <h3 className="font-semibold text-slate-800">
+                              {veiculo.nome_veiculo || veiculoLabels[veiculo.tipo]}
+                            </h3>
                             <p className="text-xs text-slate-500">{veiculo.placa}</p>
                           </div>
                         </div>
@@ -289,7 +308,51 @@ export default function MeusVeiculos() {
                             )}
                           </div>
                         )}
+                        
+                        <div>
+                          <p className="text-xs text-slate-500">Valor por Km</p>
+                          <p className="text-sm font-semibold text-green-600">
+                            R$ {veiculo.valor_por_km?.toFixed(2) || '0,00'}
+                          </p>
+                        </div>
+
+                        {veiculo.modalidades && veiculo.modalidades.length > 0 && (
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Modalidades</p>
+                            <div className="flex flex-wrap gap-1">
+                              {veiculo.modalidades.slice(0, 3).map((mod) => (
+                                <Badge key={mod} variant="outline" className="text-xs">
+                                  {mod}
+                                </Badge>
+                              ))}
+                              {veiculo.modalidades.length > 3 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{veiculo.modalidades.length - 3}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
+
+                      {/* Estatísticas de Uso */}
+                      {totalEntregas > 0 && (
+                        <div className="pt-3 border-t border-slate-100">
+                          <p className="text-xs text-slate-500 mb-2 font-medium">Histórico de Uso</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-blue-50 rounded-lg p-2">
+                              <p className="text-xs text-blue-600 mb-0.5">Entregas</p>
+                              <p className="text-lg font-bold text-blue-700">{totalEntregas}</p>
+                            </div>
+                            <div className="bg-green-50 rounded-lg p-2">
+                              <p className="text-xs text-green-600 mb-0.5">Ganhos</p>
+                              <p className="text-lg font-bold text-green-700">
+                                R$ {totalGanhos.toFixed(0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       <div className="flex gap-2 pt-2">
                         {!isAtivo && (

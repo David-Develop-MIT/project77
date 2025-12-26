@@ -28,7 +28,7 @@ const modalidadesServico = [
 
 export default function VeiculoForm({ veiculo, onSubmit, onCancel, isLoading }) {
   const [formData, setFormData] = useState({
-    tipo: veiculo?.tipo || 'carro',
+    tipo: veiculo?.tipo || 'moto',
     modalidades: veiculo?.modalidades || [],
     nome_veiculo: veiculo?.nome_veiculo || '',
     placa: veiculo?.placa || '',
