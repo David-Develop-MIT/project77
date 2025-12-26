@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Truck, Save, Loader2, Phone, FileText } from 'lucide-react';
+import { ArrowLeft, Truck, Save, Loader2, Phone, FileText, Upload, X, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,31 +29,100 @@ export default function TornarseMotorista() {
     veiculo_tipo: 'moto',
     veiculo_placa: '',
     veiculo_modelo: '',
+    veiculo_foto_url: '',
+    modalidades: [],
     status: 'disponivel'
   });
+
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+
+  const aplicarMascaraTelefone = (valor) => {
+    const numeros = valor.replace(/\D/g, '');
+    if (numeros.length <= 10) {
+      return numeros.replace(/(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
+    }
+    return numeros.replace(/(\d{2})(\d{5})(\d{0,4})/, '($1) $2-$3');
+  };
+
+  const aplicarMascaraCPF = (valor) => {
+    const numeros = valor.replace(/\D/g, '');
+    return numeros.replace(/(\d{3})(\d{3})(\d{3})(\d{0,2})/, '$1.$2.$3-$4');
+  };
+
+  const handleFotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setUploadingFoto(true);
+    try {
+      const { data } = await base44.integrations.Core.UploadFile({ file });
+      setFormData(prev => ({ ...prev, veiculo_foto_url: data.file_url }));
+      toast.success('Foto carregada com sucesso!');
+    } catch (error) {
+      toast.error('Erro ao carregar foto');
+    } finally {
+      setUploadingFoto(false);
+    }
+  };
+
+  const toggleModalidade = (modalidade) => {
+    setFormData(prev => ({
+      ...prev,
+      modalidades: prev.modalidades.includes(modalidade)
+        ? prev.modalidades.filter(m => m !== modalidade)
+        : [...prev.modalidades, modalidade]
+    }));
+  };
 
   const cadastrarMutation = useMutation({
     mutationFn: async (data) => {
       // Criar motorista
       const motorista = await base44.entities.Motorista.create(data);
       
-      // Atualizar user
-      const tiposAtuais = user.tipos_conta || [];
-      await base44.auth.updateMe({
-        tipos_conta: [...new Set([...tiposAtuais, 'motorista'])],
+      // Criar veículo com as modalidades
+      await base44.entities.Veiculo.create({
         motorista_id: motorista.id,
-        modo_ativo: 'motorista'
+        tipo: data.veiculo_tipo,
+        placa: data.veiculo_placa,
+        modelo: data.veiculo_modelo,
+        nome_motorista: data.nome,
+        foto_url: data.veiculo_foto_url,
+        modalidades: data.modalidades,
+        valor_por_km: 0,
+        ativo: true
       });
+      
+      // Buscar usuário pickup
+      const usuarios = await base44.entities.UsuarioPickup.list();
+      const usuarioPickup = usuarios.find(u => u.email === user?.email);
+      
+      if (usuarioPickup) {
+        // Atualizar UsuarioPickup
+        const tiposAtuais = usuarioPickup.tipos_conta || [];
+        await base44.entities.UsuarioPickup.update(usuarioPickup.id, {
+          tipos_conta: [...new Set([...tiposAtuais, 'motorista'])],
+          motorista_id: motorista.id,
+          modo_ativo: 'motorista'
+        });
+      }
       
       return motorista;
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['currentUser']);
       toast.success('Cadastro concluído! Bem-vindo ao time de motoristas! 🚗');
-      navigate(createPageUrl('PedidosDisponiveis'));
+      setTimeout(() => {
+        navigate(createPageUrl('PedidosDisponiveis'));
+      }, 1000);
     },
-    onError: () => {
-      toast.error('Erro ao cadastrar motorista');
+    onError: (error) => {
+      console.error('Erro ao cadastrar:', error);
+      toast.error('Erro ao cadastrar motorista: ' + error.message);
     }
   });
 
@@ -61,6 +130,10 @@ export default function TornarseMotorista() {
     e.preventDefault();
     if (!formData.nome || !formData.telefone || !formData.veiculo_tipo) {
       toast.error('Preencha os campos obrigatórios');
+      return;
+    }
+    if (formData.modalidades.length === 0) {
+      toast.error('Selecione pelo menos uma modalidade de serviço');
       return;
     }
     cadastrarMutation.mutate(formData);
@@ -140,9 +213,10 @@ export default function TornarseMotorista() {
                     <Input
                       id="telefone"
                       value={formData.telefone}
-                      onChange={(e) => setFormData({...formData, telefone: e.target.value})}
+                      onChange={(e) => setFormData({...formData, telefone: aplicarMascaraTelefone(e.target.value)})}
                       placeholder="(00) 00000-0000"
                       className="rounded-xl pl-10"
+                      maxLength={15}
                       required
                     />
                   </div>
@@ -153,9 +227,10 @@ export default function TornarseMotorista() {
                   <Input
                     id="cpf"
                     value={formData.cpf}
-                    onChange={(e) => setFormData({...formData, cpf: e.target.value})}
+                    onChange={(e) => setFormData({...formData, cpf: aplicarMascaraCPF(e.target.value)})}
                     placeholder="000.000.000-00"
                     className="rounded-xl"
+                    maxLength={14}
                   />
                 </div>
               </div>
@@ -221,6 +296,84 @@ export default function TornarseMotorista() {
                     placeholder="Ex: Honda CG 160"
                     className="rounded-xl"
                   />
+                </div>
+              </div>
+
+              <div>
+                <Label>Foto do Veículo</Label>
+                <div className="mt-2">
+                  {formData.veiculo_foto_url ? (
+                    <div className="relative">
+                      <img
+                        src={formData.veiculo_foto_url}
+                        alt="Veículo"
+                        className="w-full h-48 object-cover rounded-xl"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 rounded-full"
+                        onClick={() => setFormData(prev => ({ ...prev, veiculo_foto_url: '' }))}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-orange-500 transition-colors">
+                      <div className="flex flex-col items-center justify-center py-4">
+                        {uploadingFoto ? (
+                          <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+                        ) : (
+                          <>
+                            <Upload className="w-8 h-8 text-slate-400 mb-2" />
+                            <p className="text-sm text-slate-600">Clique para adicionar foto</p>
+                            <p className="text-xs text-slate-400 mt-1">PNG, JPG até 5MB</p>
+                          </>
+                        )}
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleFotoUpload}
+                        disabled={uploadingFoto}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <Label>Modalidades de Serviço *</Label>
+                <p className="text-xs text-slate-500 mb-2">Selecione os tipos de serviço que deseja realizar</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {[
+                    { value: 'motoboy', label: '🏍️ Motoboy', color: 'orange' },
+                    { value: 'carreto', label: '🚚 Carreto', color: 'blue' },
+                    { value: 'mudanca', label: '📦 Mudança', color: 'purple' },
+                    { value: 'entulho', label: '🏗️ Entulho', color: 'slate' },
+                    { value: 'comida', label: '🍕 Comida', color: 'red' },
+                    { value: 'frete', label: '📦 Frete', color: 'green' }
+                  ].map((modalidade) => (
+                    <button
+                      key={modalidade.value}
+                      type="button"
+                      onClick={() => toggleModalidade(modalidade.value)}
+                      className={`p-3 rounded-xl border-2 transition-all text-sm font-medium ${
+                        formData.modalidades.includes(modalidade.value)
+                          ? `border-${modalidade.color}-500 bg-${modalidade.color}-50 text-${modalidade.color}-700`
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>{modalidade.label}</span>
+                        {formData.modalidades.includes(modalidade.value) && (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             </CardContent>
