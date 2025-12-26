@@ -554,6 +554,16 @@ export default function DetalhePedido() {
                 <CardTitle className="text-lg">Ações Rápidas</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
+                {pedido.status === 'pendente' && pedido.status_pagamento === 'pendente' && isCliente && (
+                  <Link to={`${createPageUrl('NovoPedido')}?pagar_pedido=${pedido.id}`}>
+                    <Button
+                      className="w-full justify-start rounded-xl bg-orange-500 hover:bg-orange-600 text-white"
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Pagar Agora
+                    </Button>
+                  </Link>
+                )}
                 {pedido.status !== 'concluido' && pedido.status !== 'cancelado' && (
                   <>
                     <Button
