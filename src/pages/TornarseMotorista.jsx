@@ -16,13 +16,23 @@ export default function TornarseMotorista() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { data: user } = useQuery({
-    queryKey: ['currentUser'],
+  const { data: authUser } = useQuery({
+    queryKey: ['authUser'],
     queryFn: () => base44.auth.me()
   });
 
+  const { data: user } = useQuery({
+    queryKey: ['currentUser', authUser?.email],
+    queryFn: async () => {
+      if (!authUser?.email) return null;
+      const usuarios = await base44.entities.UsuarioPickup.list();
+      return usuarios.find(u => u.email === authUser.email);
+    },
+    enabled: !!authUser?.email
+  });
+
   const [formData, setFormData] = useState({
-    nome: user?.full_name || '',
+    nome: authUser?.full_name || '',
     telefone: '',
     cpf: '',
     cnh: '',
@@ -60,10 +70,11 @@ export default function TornarseMotorista() {
 
     setUploadingFoto(true);
     try {
-      const { data } = await base44.integrations.Core.UploadFile({ file });
-      setFormData(prev => ({ ...prev, veiculo_foto_url: data.file_url }));
+      const result = await base44.integrations.Core.UploadFile({ file });
+      setFormData(prev => ({ ...prev, veiculo_foto_url: result.file_url }));
       toast.success('Foto carregada com sucesso!');
     } catch (error) {
+      console.error('Erro upload:', error);
       toast.error('Erro ao carregar foto');
     } finally {
       setUploadingFoto(false);
@@ -99,7 +110,7 @@ export default function TornarseMotorista() {
       
       // Buscar usuário pickup
       const usuarios = await base44.entities.UsuarioPickup.list();
-      const usuarioPickup = usuarios.find(u => u.email === user?.email);
+      const usuarioPickup = usuarios.find(u => u.email === authUser?.email);
       
       if (usuarioPickup) {
         // Atualizar UsuarioPickup
