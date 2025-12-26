@@ -100,13 +100,45 @@ export default function ConfiguracoesNotificacoes() {
       return;
     }
 
-    new Notification('🚗 Pickup Brasil', {
-      body: 'Esta é uma notificação de teste!',
+    const notification = new Notification('🚗 Pickup Brasil - Teste', {
+      body: 'Esta é uma notificação de teste com ações rápidas! Clique para ver as opções.',
       icon: '/logo.png',
-      badge: '/badge.png'
+      badge: '/badge.png',
+      requireInteraction: true,
+      vibrate: [200, 100, 200]
     });
 
-    toast.success('Notificação de teste enviada!');
+    notification.onclick = async () => {
+      const overlay = document.createElement('div');
+      overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]';
+      
+      const dialog = document.createElement('div');
+      dialog.className = 'bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl';
+      dialog.innerHTML = `
+        <h3 class="text-lg font-bold text-slate-800 mb-2">🎉 Notificação Funciona!</h3>
+        <p class="text-sm text-slate-600 mb-4">Você pode clicar nas notificações para executar ações rápidas como aceitar ofertas ou responder mensagens.</p>
+        <div class="flex gap-2">
+          <button class="flex-1 px-4 py-2 rounded-xl bg-blue-500 text-white font-medium hover:bg-blue-600">
+            ✓ Entendi
+          </button>
+          <button class="flex-1 px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-medium hover:bg-slate-200">
+            Fechar
+          </button>
+        </div>
+      `;
+      
+      document.body.appendChild(overlay);
+      
+      dialog.querySelectorAll('button').forEach(btn => {
+        btn.onclick = () => {
+          document.body.removeChild(overlay);
+        };
+      });
+
+      notification.close();
+    };
+
+    toast.success('✅ Notificação de teste enviada!');
   };
 
   const notificacoesConfig = [
@@ -207,36 +239,36 @@ export default function ConfiguracoesNotificacoes() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200">
                 <div className="flex items-center gap-3">
                   {permissaoPush === 'granted' ? (
                     <>
-                      <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <Bell className="w-5 h-5 text-green-600" />
+                      <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                        <Bell className="w-6 h-6 text-green-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800">Ativadas</p>
-                        <p className="text-sm text-slate-500">Notificações push funcionando</p>
+                        <p className="font-semibold text-slate-800">✅ Notificações Ativadas</p>
+                        <p className="text-sm text-slate-600">Você receberá notificações push com ações rápidas</p>
                       </div>
                     </>
                   ) : permissaoPush === 'denied' ? (
                     <>
-                      <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
-                        <Bell className="w-5 h-5 text-red-600" />
+                      <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                        <Bell className="w-6 h-6 text-red-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800">Bloqueadas</p>
-                        <p className="text-sm text-slate-500">Ative nas configurações do navegador</p>
+                        <p className="font-semibold text-slate-800">❌ Notificações Bloqueadas</p>
+                        <p className="text-sm text-slate-600">Ative nas configurações do navegador</p>
                       </div>
                     </>
                   ) : (
                     <>
-                      <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                        <Bell className="w-5 h-5 text-amber-600" />
+                      <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                        <Bell className="w-6 h-6 text-amber-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-slate-800">Não Ativadas</p>
-                        <p className="text-sm text-slate-500">Clique para ativar</p>
+                        <p className="font-semibold text-slate-800">🔔 Ativar Notificações Push</p>
+                        <p className="text-sm text-slate-600">Receba alertas com ações rápidas no navegador</p>
                       </div>
                     </>
                   )}
@@ -247,17 +279,17 @@ export default function ConfiguracoesNotificacoes() {
                       onClick={testarNotificacao}
                       variant="outline"
                       size="sm"
-                      className="rounded-lg"
+                      className="rounded-lg border-2 border-green-300 hover:bg-green-50"
                     >
-                      Testar
+                      🧪 Testar
                     </Button>
                   )}
                   {permissaoPush === 'default' && (
                     <Button
                       onClick={solicitarPermissaoPush}
-                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg shadow-lg"
                     >
-                      Ativar Agora
+                      🚀 Ativar Agora
                     </Button>
                   )}
                 </div>

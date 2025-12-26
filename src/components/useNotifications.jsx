@@ -78,23 +78,95 @@ export function useNotifications() {
     }
   };
 
-  const sendPushNotification = (titulo, descricao, acoes = [], url = null) => {
-    if (Notification.permission === 'granted') {
-      const notification = showNativeNotification(titulo, {
-        body: descricao,
-        requireInteraction: false,
-        actions: acoes,
-        data: { url }
-      });
+  const sendPushNotification = (titulo, descricao, dados = {}) => {
+    if (Notification.permission !== 'granted') return;
 
-      if (notification && url) {
-        notification.onclick = () => {
-          window.focus();
-          window.location.href = url;
-          notification.close();
-        };
+    const { url, acoes = [] } = dados;
+
+    const notification = showNativeNotification(titulo, {
+      body: descricao,
+      tag: dados.tag || `notif-${Date.now()}`,
+      data: dados,
+      silent: false
+    });
+
+    if (!notification) return;
+
+    // Click no corpo da notificação
+    notification.onclick = (event) => {
+      event.preventDefault();
+      window.focus();
+      
+      if (url) {
+        window.location.href = url;
       }
+      
+      notification.close();
+    };
+
+    // Processar ações customizadas via event listeners
+    if (acoes.length > 0 && dados.onAction) {
+      // Como as Notification Actions não são bem suportadas em todos navegadores,
+      // criamos botões virtuais que o usuário pode clicar
+      notification.onclick = async (event) => {
+        event.preventDefault();
+        window.focus();
+        
+        // Mostrar diálogo com ações
+        const acao = await mostrarDialogoAcao(titulo, descricao, acoes);
+        
+        if (acao && dados.onAction) {
+          await dados.onAction(acao);
+        }
+        
+        notification.close();
+      };
     }
+  };
+
+  const mostrarDialogoAcao = (titulo, descricao, acoes) => {
+    return new Promise((resolve) => {
+      const overlay = document.createElement('div');
+      overlay.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]';
+      
+      const dialog = document.createElement('div');
+      dialog.className = 'bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl';
+      dialog.innerHTML = `
+        <h3 class="text-lg font-bold text-slate-800 mb-2">${titulo}</h3>
+        <p class="text-sm text-slate-600 mb-4">${descricao}</p>
+        <div class="flex gap-2 flex-col">
+          ${acoes.map((acao, i) => `
+            <button 
+              data-action="${acao.action}" 
+              class="px-4 py-2 rounded-xl font-medium transition-colors ${
+                i === 0 
+                  ? 'bg-blue-500 text-white hover:bg-blue-600' 
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+              }"
+            >
+              ${acao.title}
+            </button>
+          `).join('')}
+          <button 
+            data-action="dismiss" 
+            class="px-4 py-2 rounded-xl font-medium text-slate-500 hover:bg-slate-50"
+          >
+            Fechar
+          </button>
+        </div>
+      `;
+      
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+      
+      dialog.querySelectorAll('button').forEach(btn => {
+        btn.onclick = () => {
+          const action = btn.getAttribute('data-action');
+          document.body.removeChild(overlay);
+          resolve(action === 'dismiss' ? null : action);
+        };
+      });
+    });
   };
 
   // Buscar notificações não lidas - TEMPO REAL
@@ -155,8 +227,19 @@ export function useNotifications() {
           sendPushNotification(
             `💬 ${mensagem.remetente_nome}`,
             mensagem.tipo === 'texto' ? mensagem.conteudo.substring(0, 100) : 'Nova mensagem',
-            [],
-            createPageUrl('Chat')
+            {
+              url: createPageUrl('Chat'),
+              tag: `msg-${mensagem.conversa_id}`,
+              acoes: [
+                { action: 'responder', title: '✍ Responder' },
+                { action: 'ver', title: '👁 Ver Chat' }
+              ],
+              onAction: async (acao) => {
+                if (acao === 'responder' || acao === 'ver') {
+                  window.location.href = createPageUrl('Chat');
+                }
+              }
+            }
           );
         }
 
@@ -230,8 +313,22 @@ export function useNotifications() {
           sendPushNotification(
             '🚗 Novo Pedido Disponível',
             `${pedido.tipo_servico} - ${pedido.nome_cliente}`,
-            [],
-            createPageUrl('PedidosDisponiveis')
+            {
+              url: createPageUrl('PedidosDisponiveis'),
+              tag: `pedido-${pedido.id}`,
+              acoes: [
+                { action: 'aceitar', title: '✓ Aceitar Pedido' },
+                { action: 'ver', title: '👁 Ver Detalhes' }
+              ],
+              onAction: async (acao) => {
+                if (acao === 'aceitar') {
+                  const { processarAcaoNotificacao } = await import('@/components/WebPushNotifications');
+                  await processarAcaoNotificacao('aceitar_pedido', 'novo_pedido', { pedido_id: pedido.id });
+                } else if (acao === 'ver') {
+                  window.location.href = createPageUrl(`DetalhePedido?id=${pedido.id}`);
+                }
+              }
+            }
           );
         }
 
@@ -290,8 +387,21 @@ export function useNotifications() {
             sendPushNotification(
               `${statusInfo.emoji} ${statusInfo.text}`,
               `Seu pedido de ${pedido.tipo_servico}`,
-              [],
-              `${createPageUrl('DetalhePedido')}?id=${pedido.id}`
+              {
+                url: `${createPageUrl('DetalhePedido')}?id=${pedido.id}`,
+                tag: `status-${pedido.id}`,
+                acoes: [
+                  { action: 'ver', title: '👁 Ver Pedido' },
+                  { action: 'chat', title: '💬 Abrir Chat' }
+                ],
+                onAction: async (acao) => {
+                  if (acao === 'ver') {
+                    window.location.href = `${createPageUrl('DetalhePedido')}?id=${pedido.id}`;
+                  } else if (acao === 'chat') {
+                    window.location.href = createPageUrl('Chat');
+                  }
+                }
+              }
             );
           }
 
@@ -349,8 +459,25 @@ export function useNotifications() {
           sendPushNotification(
             '💰 Nova Oferta Recebida',
             `${oferta.motorista_nome} - R$ ${oferta.valor_proposto.toFixed(2)}`,
-            [],
-            `${createPageUrl('DetalhePedido')}?id=${oferta.pedido_id}`
+            {
+              url: `${createPageUrl('DetalhePedido')}?id=${oferta.pedido_id}`,
+              tag: `oferta-${oferta.id}`,
+              acoes: [
+                { action: 'aceitar', title: '✓ Aceitar Oferta' },
+                { action: 'ver', title: '👁 Ver Detalhes' }
+              ],
+              onAction: async (acao) => {
+                if (acao === 'aceitar') {
+                  const { processarAcaoNotificacao } = await import('@/components/WebPushNotifications');
+                  await processarAcaoNotificacao('aceitar_oferta', 'nova_oferta', { 
+                    oferta_id: oferta.id, 
+                    pedido_id: oferta.pedido_id 
+                  });
+                } else if (acao === 'ver') {
+                  window.location.href = `${createPageUrl('DetalhePedido')}?id=${oferta.pedido_id}`;
+                }
+              }
+            }
           );
         }
 
@@ -403,8 +530,17 @@ export function useNotifications() {
           sendPushNotification(
             '⭐ Nova Avaliação',
             `Você recebeu ${avaliacao.nota} estrelas`,
-            [],
-            null
+            {
+              tag: `avaliacao-${avaliacao.id}`,
+              acoes: [
+                { action: 'ver', title: '👁 Ver Avaliação' }
+              ],
+              onAction: async (acao) => {
+                if (acao === 'ver' && avaliacao.pedido_id) {
+                  window.location.href = `${createPageUrl('DetalhePedido')}?id=${avaliacao.pedido_id}`;
+                }
+              }
+            }
           );
         }
 

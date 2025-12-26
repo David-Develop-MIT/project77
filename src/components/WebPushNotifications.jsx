@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
+import { createPageUrl } from '@/utils';
 
 // Função para solicitar permissão e registrar push
 const requestNotificationPermission = async (userEmail) => {
@@ -21,7 +22,7 @@ const requestNotificationPermission = async (userEmail) => {
   return false;
 };
 
-// Função para mostrar notificação nativa
+// Função para mostrar notificação nativa com ações
 export const showNativeNotification = (title, options = {}) => {
   if (!('Notification' in window) || Notification.permission !== 'granted') {
     return null;
@@ -30,10 +31,40 @@ export const showNativeNotification = (title, options = {}) => {
   const notification = new Notification(title, {
     icon: '/logo.png',
     badge: '/badge.png',
+    requireInteraction: true,
+    vibrate: [200, 100, 200],
     ...options
   });
 
   return notification;
+};
+
+// Função para processar ação de notificação
+export const processarAcaoNotificacao = async (acao, tipo, dados) => {
+  try {
+    const response = await base44.functions.invoke('processarAcaoNotificacao', {
+      acao,
+      tipo,
+      dados
+    });
+
+    if (response.data.sucesso) {
+      toast.success(response.data.mensagem);
+      
+      if (response.data.redirect) {
+        window.location.href = createPageUrl(response.data.redirect);
+      }
+      
+      return true;
+    } else {
+      toast.error(response.data.error || 'Erro ao processar ação');
+      return false;
+    }
+  } catch (error) {
+    console.error('Erro ao processar ação:', error);
+    toast.error('Erro ao processar ação');
+    return false;
+  }
 };
 
 export default function WebPushNotifications({ user, preferencias }) {
