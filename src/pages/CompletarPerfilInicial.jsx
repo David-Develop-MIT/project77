@@ -11,7 +11,7 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function CompletarPerfilInicial() {
   const navigate = useNavigate();
-  const [selectedMode, setSelectedMode] = useState(null);
+  const [selectedModes, setSelectedModes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const { data: authUser } = useQuery({
@@ -30,23 +30,31 @@ export default function CompletarPerfilInicial() {
   });
 
   const handleModeSelect = (mode) => {
-    setSelectedMode(mode);
+    setSelectedModes(prev => {
+      if (prev.includes(mode)) {
+        return prev.filter(m => m !== mode);
+      } else {
+        return [...prev, mode];
+      }
+    });
   };
 
   const handleContinue = async () => {
-    if (!selectedMode) {
-      toast.error('Por favor, selecione uma modalidade');
+    if (selectedModes.length === 0) {
+      toast.error('Por favor, selecione pelo menos uma modalidade');
       return;
     }
 
     setIsLoading(true);
 
     try {
+      const modoInicial = selectedModes[0];
+      
       if (usuarioPickup) {
         // Atualizar UsuarioPickup existente
         await base44.entities.UsuarioPickup.update(usuarioPickup.id, {
-          tipos_conta: [selectedMode],
-          modo_ativo: selectedMode
+          tipos_conta: selectedModes,
+          modo_ativo: modoInicial
         });
       } else {
         // Criar novo UsuarioPickup
@@ -54,8 +62,8 @@ export default function CompletarPerfilInicial() {
           name: authUser.full_name,
           email: authUser.email,
           token_acesso: Math.random().toString(36).substring(2, 15),
-          tipos_conta: [selectedMode],
-          modo_ativo: selectedMode,
+          tipos_conta: selectedModes,
+          modo_ativo: modoInicial,
           ativo: true
         });
       }
@@ -85,7 +93,7 @@ export default function CompletarPerfilInicial() {
             <CheckCircle className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-800 mb-2">Complete seu Perfil</h1>
-          <p className="text-slate-600">Escolha como você deseja usar o aplicativo</p>
+          <p className="text-slate-600">Selecione um ou ambos os perfis</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 mb-6">
@@ -95,7 +103,7 @@ export default function CompletarPerfilInicial() {
           >
             <Card
               className={`cursor-pointer transition-all border-2 ${
-                selectedMode === 'cliente'
+                selectedModes.includes('cliente')
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-slate-200 hover:border-slate-300'
               }`}
@@ -106,7 +114,7 @@ export default function CompletarPerfilInicial() {
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                     <User className="w-8 h-8 text-white" />
                   </div>
-                  {selectedMode === 'cliente' && (
+                  {selectedModes.includes('cliente') && (
                     <CheckCircle className="w-6 h-6 text-blue-500" />
                   )}
                 </div>
@@ -140,7 +148,7 @@ export default function CompletarPerfilInicial() {
           >
             <Card
               className={`cursor-pointer transition-all border-2 ${
-                selectedMode === 'motorista'
+                selectedModes.includes('motorista')
                   ? 'border-orange-500 bg-orange-50'
                   : 'border-slate-200 hover:border-slate-300'
               }`}
@@ -151,7 +159,7 @@ export default function CompletarPerfilInicial() {
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
                     <Truck className="w-8 h-8 text-white" />
                   </div>
-                  {selectedMode === 'motorista' && (
+                  {selectedModes.includes('motorista') && (
                     <CheckCircle className="w-6 h-6 text-orange-500" />
                   )}
                 </div>
@@ -182,7 +190,7 @@ export default function CompletarPerfilInicial() {
 
         <Button
           onClick={handleContinue}
-          disabled={!selectedMode || isLoading}
+          disabled={selectedModes.length === 0 || isLoading}
           className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-xl h-14 text-lg font-semibold"
         >
           {isLoading ? (
@@ -195,8 +203,12 @@ export default function CompletarPerfilInicial() {
           )}
         </Button>
 
-        <p className="text-center text-xs text-slate-500 mt-6">
-          Você poderá adicionar mais modalidades posteriormente
+        <p className="text-center text-sm text-slate-600 mt-4">
+          {selectedModes.length > 0 && (
+            <span className="font-medium">
+              ✓ {selectedModes.length === 2 ? 'Ambos os perfis' : selectedModes[0] === 'cliente' ? 'Cliente' : 'Motorista'} selecionado{selectedModes.length > 1 ? 's' : ''}
+            </span>
+          )}
         </p>
       </motion.div>
     </div>
