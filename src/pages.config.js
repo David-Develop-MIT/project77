@@ -30,6 +30,7 @@ import TornarseMotorista from './pages/TornarseMotorista';
 import RotasDia from './pages/RotasDia';
 import ConfiguracoesNotificacoes from './pages/ConfiguracoesNotificacoes';
 import HistoricoPrecos from './pages/HistoricoPrecos';
+import PagarPedido from './pages/PagarPedido';
 import __Layout from './Layout.jsx';
 
 
@@ -66,6 +67,7 @@ export const PAGES = {
     "RotasDia": RotasDia,
     "ConfiguracoesNotificacoes": ConfiguracoesNotificacoes,
     "HistoricoPrecos": HistoricoPrecos,
+    "PagarPedido": PagarPedido,
 }
 
 export const pagesConfig = {
