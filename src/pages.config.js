@@ -29,6 +29,7 @@ import TokenLogin from './pages/TokenLogin';
 import TornarseMotorista from './pages/TornarseMotorista';
 import RotasDia from './pages/RotasDia';
 import ConfiguracoesNotificacoes from './pages/ConfiguracoesNotificacoes';
+import HistoricoPrecos from './pages/HistoricoPrecos';
 import __Layout from './Layout.jsx';
 
 
@@ -64,6 +65,7 @@ export const PAGES = {
     "TornarseMotorista": TornarseMotorista,
     "RotasDia": RotasDia,
     "ConfiguracoesNotificacoes": ConfiguracoesNotificacoes,
+    "HistoricoPrecos": HistoricoPrecos,
 }
 
 export const pagesConfig = {
