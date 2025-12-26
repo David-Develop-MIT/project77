@@ -113,12 +113,25 @@ export default function TornarseMotorista() {
       const usuarioPickup = usuarios.find(u => u.email === authUser?.email);
       
       if (usuarioPickup) {
-        // Atualizar UsuarioPickup
-        const tiposAtuais = usuarioPickup.tipos_conta || [];
+        // Atualizar UsuarioPickup - preservar tipos_conta existentes e adicionar motorista
+        const tiposAtuais = usuarioPickup.tipos_conta || ['cliente'];
+        const novosTipos = [...new Set([...tiposAtuais, 'motorista'])];
+        
         await base44.entities.UsuarioPickup.update(usuarioPickup.id, {
-          tipos_conta: [...new Set([...tiposAtuais, 'motorista'])],
+          tipos_conta: novosTipos,
           motorista_id: motorista.id,
           modo_ativo: 'motorista'
+        });
+      } else {
+        // Criar novo UsuarioPickup caso não exista
+        await base44.entities.UsuarioPickup.create({
+          name: authUser.full_name || authUser.email,
+          email: authUser.email,
+          token_acesso: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+          tipos_conta: ['cliente', 'motorista'],
+          motorista_id: motorista.id,
+          modo_ativo: 'motorista',
+          ativo: true
         });
       }
       
