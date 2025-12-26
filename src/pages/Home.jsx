@@ -1,16 +1,19 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import { Plus, Clock, CheckCircle, TrendingUp, Package, Truck } from 'lucide-react';
+import { Plus, Clock, CheckCircle, TrendingUp, Package, Truck, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import StatsCard from '@/components/StatsCard';
 import PedidoCard from '@/components/PedidoCard';
 import { servicoConfig } from '@/components/servicoConfig';
 
 export default function Home() {
+  const queryClient = useQueryClient();
+  
   const { data: authUser } = useQuery({
     queryKey: ['authUser'],
     queryFn: () => base44.auth.me()
@@ -25,6 +28,21 @@ export default function Home() {
     },
     enabled: !!authUser?.email
   });
+
+  const alternarModoMutation = useMutation({
+    mutationFn: async (novoModo) => {
+      if (!user?.id) return;
+      await base44.entities.UsuarioPickup.update(user.id, { modo_ativo: novoModo });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['currentUser']);
+      queryClient.invalidateQueries(['pedidos']);
+      toast.success('Modo alterado com sucesso!');
+      window.location.reload();
+    }
+  });
+
+  const temAmbos = user?.tipos_conta?.length > 1;
 
   const { data: pedidos = [], isLoading } = useQuery({
     queryKey: ['pedidos'],
@@ -67,6 +85,17 @@ export default function Home() {
             </p>
           </div>
           <div className="flex gap-2">
+            {temAmbos && (
+              <Button
+                onClick={() => alternarModoMutation.mutate(user.modo_ativo === 'cliente' ? 'motorista' : 'cliente')}
+                variant="outline"
+                className="rounded-xl"
+                disabled={alternarModoMutation.isPending}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Modo {user.modo_ativo === 'cliente' ? 'Motorista' : 'Cliente'}
+              </Button>
+            )}
             {user?.modo_ativo === 'motorista' && (
               <Link to={createPageUrl('MeusVeiculos')}>
                 <Button variant="outline" className="rounded-xl">
