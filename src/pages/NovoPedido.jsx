@@ -98,55 +98,47 @@ export default function NovoPedido() {
       if (data.metodo_pagamento === 'cartao_credito') {
         const cartaoPadrao = metodosPagamento.find(m => m.padrao) || metodosPagamento[0];
         
-        const { data: checkoutData } = await base44.functions.invoke('criarCheckoutStripe', {
+        const response = await base44.functions.invoke('criarCheckoutStripe', {
           pedido_id: pedido.id,
           valor: data.valor_total,
           metodo_pagamento: data.metodo_pagamento,
-          payment_method_id: cartaoPadrao.stripe_payment_method_id
+          payment_method_id: cartaoPadrao?.stripe_payment_method_id
         });
         
-        if (checkoutData.checkout_url) {
-          window.location.href = checkoutData.checkout_url;
+        if (response?.data?.checkout_url) {
+          window.location.href = response.data.checkout_url;
           return pedido;
+        } else {
+          throw new Error('URL de checkout não retornada');
         }
       }
       
       // Se for PIX, criar checkout e redirecionar
       if (data.metodo_pagamento === 'pix') {
-        try {
-          const response = await base44.functions.invoke('criarCheckoutStripe', {
-            pedido_id: pedido.id,
-            valor: data.valor_total,
-            metodo_pagamento: 'pix'
-          });
-          
-          if (response?.data?.payment_intent_id) {
-            navigate(createPageUrl('PagamentoPix') + `?pedido_id=${pedido.id}&payment_intent_id=${response.data.payment_intent_id}`);
-            return pedido;
-          } else {
-            throw new Error('Dados de pagamento PIX não retornados');
-          }
-        } catch (error) {
-          console.error('Erro ao criar checkout PIX:', error);
-          throw error;
+        const response = await base44.functions.invoke('criarCheckoutStripe', {
+          pedido_id: pedido.id,
+          valor: data.valor_total,
+          metodo_pagamento: 'pix'
+        });
+        
+        if (response?.data?.payment_intent_id) {
+          navigate(createPageUrl('PagamentoPix') + `?pedido_id=${pedido.id}&payment_intent_id=${response.data.payment_intent_id}`);
+          return pedido;
+        } else {
+          throw new Error('ID de pagamento PIX não retornado');
         }
       }
       
       return pedido;
     },
     onSuccess: (pedido) => {
-      if (formData.metodo_pagamento === 'cartao_credito') {
-        // Não mostrar toast, pois será redirecionado
-        return;
-      }
-      if (formData.metodo_pagamento === 'pix') {
-        // Será redirecionado para página PIX
+      if (formData.metodo_pagamento === 'cartao_credito' || formData.metodo_pagamento === 'pix') {
         return;
       }
     },
     onError: (error) => {
       console.error('Erro completo:', error);
-      toast.error('Erro ao criar pedido. Tente novamente.');
+      toast.error(error.message || 'Erro ao criar pedido. Tente novamente.');
     }
   });
 
