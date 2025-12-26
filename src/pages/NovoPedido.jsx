@@ -576,12 +576,12 @@ export default function NovoPedido() {
                       </div>
                     </div>
                     {formData.valor_calculado && (
-                      <div className="pt-3 border-t border-blue-300">
-                        <p className="text-xs text-blue-600 mb-1">Valor Calculado</p>
-                        <p className="text-2xl font-bold text-blue-700">
-                          R$ {formData.valor_calculado.toFixed(2)}
-                        </p>
-                      </div>
+                     <div className="pt-3 border-t border-blue-300">
+                       <p className="text-xs text-blue-600 mb-1">Valor Calculado</p>
+                       <p className="text-2xl font-bold text-blue-700">
+                         R$ {formData.valor_calculado.toFixed(2).replace('.', ',')}
+                       </p>
+                     </div>
                     )}
                   </motion.div>
                 )}
