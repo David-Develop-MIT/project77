@@ -85,12 +85,12 @@ export default function Home() {
             </p>
           </div>
           <div className="flex gap-2">
-            {temAmbos && (
+            {temAmbos && user && (
               <Button
                 onClick={() => alternarModoMutation.mutate(user.modo_ativo === 'cliente' ? 'motorista' : 'cliente')}
                 variant="outline"
                 className="rounded-xl"
-                disabled={alternarModoMutation.isPending}
+                disabled={alternarModoMutation.isPending || !user}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Modo {user.modo_ativo === 'cliente' ? 'Motorista' : 'Cliente'}
