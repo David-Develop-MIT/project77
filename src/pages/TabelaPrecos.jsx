@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Plus, Edit, Trash2, Save, X } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Save, X, History, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,12 +32,34 @@ export default function TabelaPrecos() {
     }
   });
 
+  const { data: authUser } = useQuery({
+    queryKey: ['authUser'],
+    queryFn: () => base44.auth.me()
+  });
+
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.TabelaPreco.update(id, data),
+    mutationFn: async ({ id, data, precoAnterior, motivo, tipoAlteracao }) => {
+      // Atualizar o preço
+      await base44.entities.TabelaPreco.update(id, data);
+      
+      // Registrar no histórico
+      await base44.entities.HistoricoPreco.create({
+        tipo_servico: precoAnterior.tipo_servico,
+        valor_por_km_anterior: precoAnterior.valor_por_km,
+        valor_por_km_novo: data.valor_por_km,
+        valor_minimo_anterior: precoAnterior.valor_minimo,
+        valor_minimo_novo: data.valor_minimo,
+        motivo: motivo || 'Atualização manual',
+        tipo_alteracao: tipoAlteracao || 'ajuste',
+        alterado_por: authUser?.email,
+        tabela_preco_id: id
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['precos'] });
+      queryClient.invalidateQueries({ queryKey: ['historico-precos'] });
       setEditando(null);
-      toast.success('Preço atualizado!');
+      toast.success('Preço atualizado e registrado no histórico!');
     }
   });
 
@@ -53,9 +75,9 @@ export default function TabelaPrecos() {
     tipo => !precos.find(p => p.tipo_servico === tipo)
   );
 
-  const handleSave = (data, id = null) => {
-    if (id) {
-      updateMutation.mutate({ id, data });
+  const handleSave = (data, id = null, precoAnterior = null, motivo = null, tipoAlteracao = null) => {
+    if (id && precoAnterior) {
+      updateMutation.mutate({ id, data, precoAnterior, motivo, tipoAlteracao });
     } else {
       createMutation.mutate(data);
     }
@@ -69,6 +91,8 @@ export default function TabelaPrecos() {
       km_inicial_incluido: 0,
       ativo: true
     });
+    const [motivo, setMotivo] = useState('');
+    const [tipoAlteracao, setTipoAlteracao] = useState('ajuste');
 
     return (
       <Card className="border-orange-200">
@@ -131,6 +155,34 @@ export default function TabelaPrecos() {
             </p>
           </div>
 
+          {preco && (
+            <>
+              <div className="space-y-2">
+                <Label>Tipo de Alteração</Label>
+                <select
+                  value={tipoAlteracao}
+                  onChange={(e) => setTipoAlteracao(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="ajuste">Ajuste de Preço</option>
+                  <option value="aumento">Aumento</option>
+                  <option value="reducao">Redução</option>
+                  <option value="promocao">Promoção</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Motivo da Alteração</Label>
+                <Input
+                  value={motivo}
+                  onChange={(e) => setMotivo(e.target.value)}
+                  placeholder="Ex: Promoção de Natal, Ajuste de mercado..."
+                  className="rounded-xl"
+                />
+              </div>
+            </>
+          )}
+
           <div className="flex items-center gap-3">
             <Switch
               checked={form.ativo}
@@ -141,7 +193,7 @@ export default function TabelaPrecos() {
 
           <div className="flex gap-2 pt-2">
             <Button
-              onClick={() => onSave(form)}
+              onClick={() => onSave(form, preco?.id, preco, motivo, tipoAlteracao)}
               className="flex-1 bg-orange-500 hover:bg-orange-600 rounded-xl"
             >
               <Save className="w-4 h-4 mr-2" />
@@ -179,15 +231,23 @@ export default function TabelaPrecos() {
               <p className="text-slate-500">Gerencie os preços por km de cada serviço</p>
             </div>
           </div>
-          {servicosDisponiveis.length > 0 && !novoPreco && (
-            <Button
-              onClick={() => setNovoPreco(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Adicionar Preço
-            </Button>
-          )}
+          <div className="flex gap-2">
+            <Link to={createPageUrl('HistoricoPrecos')}>
+              <Button variant="outline" className="rounded-xl">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Ver Histórico
+              </Button>
+            </Link>
+            {servicosDisponiveis.length > 0 && !novoPreco && (
+              <Button
+                onClick={() => setNovoPreco(true)}
+                className="bg-orange-500 hover:bg-orange-600 text-white rounded-xl"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Adicionar Preço
+              </Button>
+            )}
+          </div>
         </motion.div>
 
         <div className="grid gap-4">
