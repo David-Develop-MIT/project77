@@ -5,11 +5,13 @@ import Carteira from './pages/Carteira';
 import Chat from './pages/Chat';
 import CompletarPerfil from './pages/CompletarPerfil';
 import CompletarPerfilInicial from './pages/CompletarPerfilInicial';
+import ConfiguracoesNotificacoes from './pages/ConfiguracoesNotificacoes';
 import DetalheMotorista from './pages/DetalheMotorista';
 import DetalhePedido from './pages/DetalhePedido';
 import EscolherPerfil from './pages/EscolherPerfil';
 import FazerOferta from './pages/FazerOferta';
 import HistoricoEntregas from './pages/HistoricoEntregas';
+import HistoricoPrecos from './pages/HistoricoPrecos';
 import Home from './pages/Home';
 import MeusPedidos from './pages/MeusPedidos';
 import MeusPedidosMotorista from './pages/MeusPedidosMotorista';
@@ -20,17 +22,15 @@ import NovoPedido from './pages/NovoPedido';
 import PagamentoCancelado from './pages/PagamentoCancelado';
 import PagamentoPix from './pages/PagamentoPix';
 import PagamentoSucesso from './pages/PagamentoSucesso';
+import PagarPedido from './pages/PagarPedido';
 import PedidosDisponiveis from './pages/PedidosDisponiveis';
 import PerfilCliente from './pages/PerfilCliente';
 import PerfilMotorista from './pages/PerfilMotorista';
 import RecuperarToken from './pages/RecuperarToken';
+import RotasDia from './pages/RotasDia';
 import TabelaPrecos from './pages/TabelaPrecos';
 import TokenLogin from './pages/TokenLogin';
 import TornarseMotorista from './pages/TornarseMotorista';
-import RotasDia from './pages/RotasDia';
-import ConfiguracoesNotificacoes from './pages/ConfiguracoesNotificacoes';
-import HistoricoPrecos from './pages/HistoricoPrecos';
-import PagarPedido from './pages/PagarPedido';
 import __Layout from './Layout.jsx';
 
 
@@ -42,11 +42,13 @@ export const PAGES = {
     "Chat": Chat,
     "CompletarPerfil": CompletarPerfil,
     "CompletarPerfilInicial": CompletarPerfilInicial,
+    "ConfiguracoesNotificacoes": ConfiguracoesNotificacoes,
     "DetalheMotorista": DetalheMotorista,
     "DetalhePedido": DetalhePedido,
     "EscolherPerfil": EscolherPerfil,
     "FazerOferta": FazerOferta,
     "HistoricoEntregas": HistoricoEntregas,
+    "HistoricoPrecos": HistoricoPrecos,
     "Home": Home,
     "MeusPedidos": MeusPedidos,
     "MeusPedidosMotorista": MeusPedidosMotorista,
@@ -57,21 +59,19 @@ export const PAGES = {
     "PagamentoCancelado": PagamentoCancelado,
     "PagamentoPix": PagamentoPix,
     "PagamentoSucesso": PagamentoSucesso,
+    "PagarPedido": PagarPedido,
     "PedidosDisponiveis": PedidosDisponiveis,
     "PerfilCliente": PerfilCliente,
     "PerfilMotorista": PerfilMotorista,
     "RecuperarToken": RecuperarToken,
+    "RotasDia": RotasDia,
     "TabelaPrecos": TabelaPrecos,
     "TokenLogin": TokenLogin,
     "TornarseMotorista": TornarseMotorista,
-    "RotasDia": RotasDia,
-    "ConfiguracoesNotificacoes": ConfiguracoesNotificacoes,
-    "HistoricoPrecos": HistoricoPrecos,
-    "PagarPedido": PagarPedido,
 }
 
 export const pagesConfig = {
-    mainPage: "Home",
+    mainPage: "CadastroTokenLogin",
     Pages: PAGES,
     Layout: __Layout,
 };
