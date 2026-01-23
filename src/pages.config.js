@@ -71,7 +71,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "CadastroTokenLogin",
+    mainPage: "TokenLogin",
     Pages: PAGES,
     Layout: __Layout,
 };
