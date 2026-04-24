@@ -92,8 +92,21 @@ export default function TornarseMotorista() {
 
   const cadastrarMutation = useMutation({
     mutationFn: async (data) => {
+      const emailAtual = authUser?.email;
+      if (!emailAtual) throw new Error('Usuário não autenticado. Faça login novamente.');
+
       // Criar motorista
-      const motorista = await base44.entities.Motorista.create(data);
+      const motoristaData = {
+        nome: data.nome,
+        telefone: data.telefone,
+        cpf: data.cpf,
+        cnh: data.cnh,
+        veiculo_tipo: data.veiculo_tipo,
+        veiculo_placa: data.veiculo_placa,
+        veiculo_modelo: data.veiculo_modelo,
+        status: 'disponivel'
+      };
+      const motorista = await base44.entities.Motorista.create(motoristaData);
       
       // Criar veículo com as modalidades
       await base44.entities.Veiculo.create({
@@ -102,7 +115,7 @@ export default function TornarseMotorista() {
         placa: data.veiculo_placa,
         modelo: data.veiculo_modelo,
         nome_motorista: data.nome,
-        foto_url: data.veiculo_foto_url,
+        foto_url: data.veiculo_foto_url || '',
         modalidades: data.modalidades,
         valor_por_km: 0,
         ativo: true
@@ -110,10 +123,9 @@ export default function TornarseMotorista() {
       
       // Buscar usuário pickup
       const usuarios = await base44.entities.UsuarioPickup.list();
-      const usuarioPickup = usuarios.find(u => u.email === authUser?.email);
+      const usuarioPickup = usuarios.find(u => u.email === emailAtual);
       
       if (usuarioPickup) {
-        // Atualizar UsuarioPickup - preservar tipos_conta existentes e adicionar motorista
         const tiposAtuais = usuarioPickup.tipos_conta || ['cliente'];
         const novosTipos = [...new Set([...tiposAtuais, 'motorista'])];
         
@@ -123,10 +135,9 @@ export default function TornarseMotorista() {
           modo_ativo: 'motorista'
         });
       } else {
-        // Criar novo UsuarioPickup caso não exista
         await base44.entities.UsuarioPickup.create({
-          name: authUser.full_name || authUser.email,
-          email: authUser.email,
+          name: authUser?.full_name || emailAtual,
+          email: emailAtual,
           token_acesso: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
           tipos_conta: ['cliente', 'motorista'],
           motorista_id: motorista.id,
@@ -142,18 +153,22 @@ export default function TornarseMotorista() {
       toast.success('Cadastro concluído! Bem-vindo ao time de motoristas! 🚗');
       setTimeout(() => {
         navigate(createPageUrl('PedidosDisponiveis'));
-      }, 1000);
+      }, 1500);
     },
     onError: (error) => {
-      console.error('Erro ao cadastrar:', error);
-      toast.error('Erro ao cadastrar motorista: ' + error.message);
+      console.error('Erro ao cadastrar motorista:', error);
+      toast.error('Erro ao cadastrar: ' + (error?.message || 'Tente novamente'));
     }
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!authUser?.email) {
+      toast.error('Usuário não autenticado. Faça login novamente.');
+      return;
+    }
     if (!formData.nome || !formData.telefone || !formData.veiculo_tipo) {
-      toast.error('Preencha os campos obrigatórios');
+      toast.error('Preencha os campos obrigatórios: nome, telefone e tipo de veículo');
       return;
     }
     if (formData.modalidades.length === 0) {
