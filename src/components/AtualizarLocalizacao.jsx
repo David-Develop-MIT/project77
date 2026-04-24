@@ -11,19 +11,14 @@ export default function AtualizarLocalizacao() {
   const atualizarMutation = useMutation({
     mutationFn: async ({ latitude, longitude }) => {
       if (!user?.motorista_id) return;
-      
-      const motoristas = await base44.entities.Motorista.list();
-      const motorista = motoristas.find(m => m.id === user.motorista_id);
-      
-      if (motorista) {
-        await base44.entities.Motorista.update(motorista.id, {
-          localizacao_atual: {
-            latitude,
-            longitude,
-            ultima_atualizacao: new Date().toISOString()
-          }
-        });
-      }
+      // Atualiza diretamente pelo motorista_id sem precisar listar todos
+      await base44.entities.Motorista.update(user.motorista_id, {
+        localizacao_atual: {
+          latitude,
+          longitude,
+          ultima_atualizacao: new Date().toISOString()
+        }
+      });
     }
   });
 

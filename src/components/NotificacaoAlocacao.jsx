@@ -29,7 +29,7 @@ export default function NotificacaoAlocacao() {
       );
     },
     enabled: !!user?.motorista_id,
-    refetchInterval: 10000
+    refetchInterval: 60000
   });
 
   // Atualizar pedido sugerido
