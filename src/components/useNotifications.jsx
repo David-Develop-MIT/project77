@@ -177,8 +177,8 @@ export function useNotifications() {
       return todas.filter(n => n.usuario_email === user?.email && !n.lida);
     },
     enabled: !!user?.email,
-    refetchInterval: 3000, // Poll a cada 3 segundos
-    refetchOnWindowFocus: true
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false
   });
 
   // Monitorar novas mensagens de chat - TEMPO REAL
@@ -192,8 +192,8 @@ export function useNotifications() {
       );
     },
     enabled: !!user?.email,
-    refetchInterval: 3000, // Poll a cada 3 segundos
-    refetchOnWindowFocus: true
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false
   });
 
   // Notificar sobre novas mensagens
@@ -265,8 +265,8 @@ export function useNotifications() {
       return todos.filter(p => p.status === 'pendente' || p.status === 'confirmado');
     },
     enabled: isMotorista && !!user,
-    refetchInterval: 5000, // Poll a cada 5 segundos
-    refetchOnWindowFocus: true
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false
   });
 
   // Monitorar pedidos do cliente - TEMPO REAL
@@ -277,8 +277,8 @@ export function useNotifications() {
       return todos.filter(p => p.created_by === user.email);
     },
     enabled: isCliente && !!user,
-    refetchInterval: 5000, // Poll a cada 5 segundos
-    refetchOnWindowFocus: true
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false
   });
 
   // Notificações para motoristas - novos pedidos disponíveis
@@ -435,7 +435,7 @@ export function useNotifications() {
       );
     },
     enabled: !!user?.email && isCliente,
-    refetchInterval: 5000
+    refetchInterval: 30000
   });
 
   const ofertasAnteriorRef = useRef([]);
@@ -505,7 +505,7 @@ export function useNotifications() {
       return todas.filter(a => a.avaliado_email === user.email);
     },
     enabled: !!user?.email,
-    refetchInterval: 10000
+    refetchInterval: 60000
   });
 
   const avaliacoesAnteriorRef = useRef([]);
