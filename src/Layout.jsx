@@ -64,7 +64,7 @@ export default function Layout({ children }) {
   }, [user, location, navigate]);
 
   const modoAtivo = user?.modo_ativo || 'cliente';
-  const temAmbos = user?.tipos_conta?.length > 1;
+  const temAmbos = user?.tipos_conta?.includes('motorista') && user?.tipos_conta?.includes('cliente');
 
   const handleLogout = async () => {
     toast.success('Até logo!');
@@ -106,7 +106,7 @@ export default function Layout({ children }) {
   // Itens do menu mobile bottom nav (somente os principais)
   const navItemsMobileBottom = modoAtivo === 'motorista' 
     ? navItemsMotorista.filter(item => ['Home', 'Disponíveis', 'Entregas', 'Veículos', 'Chat'].includes(item.name))
-    : navItemsCliente;
+    : navItemsCliente.filter(item => ['Home', 'Pedidos', 'Novo', 'Chat', 'Perfil'].includes(item.name));
 
   const isActive = (page) => {
     const pageUrl = createPageUrl(page);
