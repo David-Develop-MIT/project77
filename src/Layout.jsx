@@ -341,19 +341,28 @@ export default function Layout({ children }) {
 
       {/* Mobile Bottom Nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-t border-slate-100">
-        <div className="flex items-center justify-around h-16 px-4">
+        <div className="flex items-center justify-around h-16 px-2">
           {navItemsMobileBottom.map((item) =>
           <Link key={item.page} to={createPageUrl(item.page)}>
               <motion.div
               whileTap={{ scale: 0.9 }}
-              className={`flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors ${
+              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors ${
               isActive(item.page) ? 'text-orange-500' : 'text-slate-400'}`
               }>
-
-                <item.icon className="bg-transparent lucide lucide-house w-5 h-5" />
-                <span className="text-green-700 text-xs font-medium">{item.name}</span>
+                <item.icon className="w-5 h-5" />
+                <span className="text-xs font-medium">{item.name}</span>
               </motion.div>
             </Link>
+          )}
+          {temAmbos && (
+            <motion.div
+              whileTap={{ scale: 0.9 }}
+              onClick={() => alternarModoMutation.mutate(modoAtivo === 'cliente' ? 'motorista' : 'cliente')}
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-colors text-slate-400 cursor-pointer"
+            >
+              <RefreshCw className={`w-5 h-5 ${alternarModoMutation.isPending ? 'animate-spin' : ''}`} />
+              <span className="text-xs font-medium">{modoAtivo === 'cliente' ? 'Motorista' : 'Cliente'}</span>
+            </motion.div>
           )}
         </div>
       </nav>
