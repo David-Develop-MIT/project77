@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign, Truck, RefreshCw, MessageCircle, Wallet, Bell, Route } from 'lucide-react';
+import { Home, Package, Plus, Menu, X, LogOut, User, DollarSign, Truck, Car, RefreshCw, MessageCircle, Wallet, Bell, Route } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -93,7 +93,7 @@ export default function Layout({ children }) {
   { name: 'Disponíveis', icon: Package, page: 'PedidosDisponiveis' },
   { name: 'Entregas', icon: Truck, page: 'MeusPedidosMotorista' },
   { name: 'Rota do Dia', icon: Route, page: 'RotasDia' },
-  { name: 'Veículos', icon: Truck, page: 'MeusVeiculos' },
+  { name: 'Veículos', icon: Car, page: 'MeusVeiculos' },
   { name: 'Chat', icon: MessageCircle, page: 'Chat' },
   { name: 'Carteira', icon: Wallet, page: 'Carteira' },
   { name: 'Histórico', icon: Package, page: 'HistoricoEntregas' },
@@ -105,7 +105,7 @@ export default function Layout({ children }) {
 
   // Itens do menu mobile bottom nav (somente os principais)
   const navItemsMobileBottom = modoAtivo === 'motorista' 
-    ? navItemsMotorista.filter(item => ['Home', 'Disponíveis', 'Entregas', 'Chat'].includes(item.name))
+    ? navItemsMotorista.filter(item => ['Home', 'Disponíveis', 'Entregas', 'Veículos', 'Chat'].includes(item.name))
     : navItemsCliente;
 
   const isActive = (page) => {
